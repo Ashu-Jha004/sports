@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Or "mysql", "sqlite", etc.
+  url      = env("DATABASE_URL")
+}
+
+enum Rank {
+  KING
+  PAWN
+  ROOK
+  KNIGHT
+  BISHOP
+  QUEEN
+}
+enum NotificationType {
+  STAT_UPDATE_REQUEST
+  STAT_UPDATE_APPROVED
+  STAT_UPDATE_DENIED
+  FRIEND_REQUEST
+  JOIN_REQUEST
+  TEAM_INVITE  
+  TEAM_EXPIRING
+  MEMBER_JOINED
+  MEMBER_LEFT
+  ROLE_CHANGED
+  MESSAGE
+  MENTION
+  STAT_UPDATE_PERMISSION
+  FOLLOW
+  LIKE
+  COMMENT
+}
+enum UpdateStatus {
+  PENDING
+  APPROVED
+  EXPIRED
+  CANCELED
+  REJECTED
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+enum Class {
+  A
+  B
+  C
+  D
+  E
+}
+
+enum Role {
+  ATHLETE
+  BUSINESS
+}
+enum GENDER {
+ MALE
+ FEMALE
+}
+
+model User {
+  id              String    @id @default(cuid())
+  clerkId         String    @unique
+  username        String?    @unique
+  email           String    @unique
+  firstName       String?
+  lastName        String?
+  profileImageUrl String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  version         Int?      @default(1)
+  PrimarySport    String?
+  role            Role      @default(ATHLETE)
+  dateOfBirth     DateTime?
+  Rank            Rank?     @default(PAWN)
+  Class           Class?    @default(E)
+  country         String?
+  state           String?
+  city            String?
+  gender        GENDER?
+  profile       Profile?
+  // stats         Stats?
+  followers     Follow[]               @relation("UserFollowers")
+  following     Follow[]               @relation("UserFollowing")
+  counters      UserCounters?
+  // statRequests  StatUpdateRequest[]    @relation("AthleteRequests")
+  // bookings      Booking[]              @relation("UserBookings")
+  // payments      Payment[]              @relation("AthletePayments")
+  // reviews       Review[]               @relation("UserReviews")
+  notifications Notification[]         @relation("UserNotifications")
+  // posts         Post[]                 @relation("UserPosts")
+  // likes         Reaction[]             @relation("UserReactions")
+  // comments      Comment[]              @relation("UserComments")
+  // media         Media[]                @relation("UserMedia")
+  actorNotifications Notification[]    @relation("NotificationActor")
+
+  @@index([createdAt, username])
+}
+model Profile {
+  id          String     @id @default(uuid())
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String     @unique
+  bio         String?
+  avatarUrl   String?
+  location    Location?  @relation(fields: [locationId], references: [id])
+  locationId  String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+model Location {
+  id         String     @id @default(uuid())
+  state      String
+  lat        Float?
+  lon        Float?
+  city       String?
+  country    String?
+  createdAt  DateTime   @default(now())
+
+  profiles   Profile[]
+  // facilities Facility[]
+  // moderators Moderator[]
+  // statUpdateRequests StatUpdateRequest[] // ← added opposite relation
+
+  @@index([country, city,state])
+}
+model UserCounters {
+  userId         String   @id
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  followersCount Int      @default(0)
+  followingCount Int      @default(0)
+  postsCount     Int      @default(0)
+  updatedAt      DateTime @updatedAt
+}
+model Follow {
+  id          String   @id @default(uuid())
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  followerId  String
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  followingId String
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followingId, followerId])
+}
+model Notification {
+  id           String           @id @default(uuid())
+  userId       String           // Changed from Int to String to match User.id
+  user         User             @relation("UserNotifications", fields: [userId], references: [id])
+  actorId      String?          // Changed from Int to String to match User.id
+  actor        User?            @relation("NotificationActor", fields: [actorId], references: [id])
+  type         NotificationType
+  title        String
+  message      String
+  data         Json?
+  isRead       Boolean          @default(false) // Removed duplicate 'read' field
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  
+  @@index([userId, isRead])
+}

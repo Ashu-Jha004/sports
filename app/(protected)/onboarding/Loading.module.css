@@ -1,0 +1,17 @@
+/* Loading.module.css */
+
+.spinner {
+  /* Define the spinning animation */
+  animation: spin 1s linear infinite;
+  /* Ensure the component is a circle */
+  border-radius: 50%;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
