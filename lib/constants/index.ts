@@ -1,6 +1,5 @@
 // lib/constants/index.ts
 
-// Sports Data with Categories and Metadata
 export interface Sport {
   id: string;
   name: string;
@@ -170,8 +169,8 @@ export const POPULAR_COUNTRIES: CountryOption[] = [
 
 // Gender Options
 export const GENDER_OPTIONS = [
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
+  { value: "MALE", label: "MALE" },
+  { value: "FEMALE", label: "FEMALE" },
 ] as const;
 
 // Rank System

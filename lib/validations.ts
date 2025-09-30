@@ -126,7 +126,7 @@ export const frontendPersonalDetailsSchema = z.object({
 
   // Frontend uses lowercase values
   gender: z
-    .enum(["male", "female"], {
+    .enum(["MALE", "FEMALE"], {
       message: "Please select a valid gender option",
     })
     .optional(),
@@ -366,7 +366,7 @@ export type SportType = (typeof AVAILABLE_SPORTS)[number];
 // Helper function to convert frontend gender values to database enum
 export const mapGenderToDatabase = (
   frontendGender: string
-): "MALE" | "FEMALE" | undefined => {
+): "MALE" | "FEMALE" => {
   const genderMap: Record<string, "MALE" | "FEMALE"> = {
     male: "MALE",
     female: "FEMALE",
@@ -376,8 +376,8 @@ export const mapGenderToDatabase = (
 
 // Helper function to convert database gender values to frontend
 export const mapGenderFromDatabase = (
-  dbGender: "MALE" | "FEMALE" | null
-): "male" | "female" | "" => {
+  dbGender: "MALE" | "FEMALE" | ""
+): "MALE" | "FEMALE" | "" => {
   if (!dbGender) return "";
-  return dbGender.toLowerCase() as "male" | "female";
+  return dbGender.toLowerCase() as "MALE" | "FEMALE";
 };

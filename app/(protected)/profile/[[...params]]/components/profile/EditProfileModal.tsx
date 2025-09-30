@@ -20,8 +20,8 @@ interface ProfileData {
   state: string | null;
   country: string | null;
   location: {
-    lat: number | null;
-    lon: number | null;
+    lat: number |0;
+    lon: number | 0;
     city: string | null;
     state: string | null;
     country: string | null;
@@ -68,9 +68,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         dateOfBirth: currentData.dateOfBirth
           ? new Date(currentData.dateOfBirth).toISOString().split("T")[0]
           : "",
-        gender:
-          (currentData.gender?.toLowerCase() as "male" | "female" | "other") ||
-          "",
+        gender: (currentData.gender?.toLowerCase() as "MALE" | "FEMALE") || "",
         bio: currentData.bio || "",
 
         // Image data - prioritize profileImageUrl over avatarUrl
@@ -81,9 +79,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         primarySport: currentData.primarySport || "",
 
         // Geolocation data
-        latitude: currentData.location?.lat || undefined,
-        longitude: currentData.location?.lon || undefined,
-        locationAccuracy: undefined, // We don't store this in the profile
+        latitude: currentData.location?.lat || 0,
+        longitude: currentData.location?.lon || 0,
+        locationAccuracy: 0, // We don't store this in the profile
 
         // Submission state
         isSubmitting: false,

@@ -27,8 +27,8 @@ interface ProfileData {
   state: string | null;
   country: string | null;
   location: {
-    lat: number | null;
-    lon: number | null;
+    lat: number | 0;
+    lon: number | 0;
     city: string | null;
     state: string | null;
     country: string | null;
@@ -58,7 +58,7 @@ export default function ProfilePage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Determine if this is own profile or someone else's
-  const username = params?.params?.[0] as string | undefined;
+  const username = params?.params?.[0] as string;
   const isOwnProfile = !username; // /profile = own profile, /profile/username = other's profile
   const [followersModalState, setFollowersModalState] = useState<{
     isOpen: boolean;

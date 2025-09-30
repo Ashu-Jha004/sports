@@ -1,6 +1,7 @@
+// NotificationDropdown.tsx (FIXED - No more infinite loops)
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { BellIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationItem from "./NotificationItem";
@@ -15,68 +16,64 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { notifications, unreadCount, isLoading, fetchNotifications } =
-    useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    fetchNotifications,
+    markAsRead,
+    deleteNotification,
+    markAllAsRead,
+    refreshNotifications,
+  } = useNotifications();
 
-  // Fetch notifications when dropdown opens
+  // CRITICAL: Use ref to track if we've already fetched when opened
+  const hasFetchedOnOpenRef = useRef(false);
+
+  // FIXED: Only fetch once when dropdown opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !hasFetchedOnOpenRef.current) {
+      console.log("🔔 Dropdown opened, fetching notifications");
       fetchNotifications();
+      hasFetchedOnOpenRef.current = true;
+    } else if (!isOpen) {
+      // Reset when dropdown closes
+      hasFetchedOnOpenRef.current = false;
     }
-  }, [isOpen, fetchNotifications]);
+  }, [isOpen]); // CRITICAL: Remove fetchNotifications from dependencies
 
-  // Mark notification as read
+  // FIXED: Use hook methods instead of manual API calls
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      const response = await fetch(`/api/notifications/${notificationId}`, {
-        method: "PATCH",
-      });
-
-      if (response.ok) {
-        await fetchNotifications(); // Refresh list
-        toast.success("Marked as read");
-      } else {
-        toast.error("Failed to mark as read");
-      }
+      await markAsRead(notificationId); // Uses optimistic updates
+      toast.success("Marked as read");
     } catch (error) {
-      toast.error("Error updating notification");
+      toast.error("Failed to mark as read");
     }
   };
 
-  // Delete notification
   const handleDelete = async (notificationId: string) => {
     try {
-      const response = await fetch(`/api/notifications/${notificationId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        await fetchNotifications(); // Refresh list
-        toast.success("Notification deleted");
-      } else {
-        toast.error("Failed to delete notification");
-      }
+      await deleteNotification(notificationId); // Uses optimistic updates
+      toast.success("Notification deleted");
     } catch (error) {
-      toast.error("Error deleting notification");
+      toast.error("Failed to delete notification");
     }
   };
 
-  // Mark all as read
   const handleMarkAllAsRead = async () => {
     try {
-      const response = await fetch("/api/notifications", {
-        method: "PATCH",
-      });
-
-      if (response.ok) {
-        await fetchNotifications(); // Refresh list
-        toast.success("All notifications marked as read");
-      } else {
-        toast.error("Failed to mark all as read");
-      }
+      await markAllAsRead(); // Uses optimistic updates
+      toast.success("All notifications marked as read");
     } catch (error) {
-      toast.error("Error updating notifications");
+      toast.error("Failed to mark all as read");
     }
+  };
+
+  const handleRefresh = () => {
+    console.log("🔄 Manual refresh triggered");
+    hasFetchedOnOpenRef.current = false; // Reset flag
+    refreshNotifications();
   };
 
   // Handle notification click
@@ -128,7 +125,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
             </h3>
             <div className="flex items-center space-x-2">
               <button
-                onClick={fetchNotifications}
+                onClick={handleRefresh} // FIXED: Use proper refresh method
                 className="text-xs text-gray-500 hover:text-gray-700"
                 title="Refresh"
               >

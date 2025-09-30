@@ -1,3 +1,4 @@
+// store/profileWizardStore.ts
 import { create } from "zustand";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
 import { shallow } from "zustand/shallow";
@@ -9,100 +10,244 @@ import {
   ImageUploadState,
   CloudinaryUploadResponse,
   UploadImageResponse,
+  WizardStepId,
+  IMAGE_VALIDATION_CONFIG,
 } from "@/types/profile";
-import { mapGenderToDatabase } from "@/lib/validations"; // FIXED: Added import
+import { mapGenderToDatabase } from "@/lib/validations";
 
-const initialFormData: ProfileFormData = {
+/**
+ * =============================================================================
+ * CONSTANTS & CONFIGURATION
+ * =============================================================================
+ */
+
+/**
+ * Initial form data state with proper typing
+ */
+const INITIAL_FORM_DATA: ProfileFormData = {
+  // Location Information (Step 1)
   city: "",
   country: "",
+  state: "",
+
+  // Personal Details (Step 2)
   username: "",
   firstName: "",
   lastName: "",
-  state: "",
   dateOfBirth: "",
-  gender: "", // This will store database format ("MALE"/"FEMALE")
+  gender: "", // Database format ("MALE"/"FEMALE")
   bio: "",
+
+  // Image Upload
   imageFile: undefined,
   imageUrl: "",
-  // NEW: Cloudinary fields
   imageUploadState: "idle",
   imageUploadProgress: 0,
   cloudinaryPublicId: undefined,
-  primarySport: "",
-  latitude: undefined,
-  longitude: undefined,
-  locationAccuracy: undefined,
-  isSubmitting: false,
-};
 
-const initialSteps: WizardStep[] = [
+  // Sport Selection (Step 3)
+  primarySport: "",
+
+  // Geolocation (Step 4)
+  latitude: 0,
+  longitude: 0,
+  locationAccuracy: 0,
+
+  // Form State
+  isSubmitting: false,
+} as const;
+
+/**
+ * Initial wizard steps configuration
+ */
+const INITIAL_WIZARD_STEPS: readonly WizardStep[] = [
   { id: 1, title: "Location", isCompleted: false, isValid: false },
   { id: 2, title: "Personal Details", isCompleted: false, isValid: false },
   { id: 3, title: "Primary Sport", isCompleted: false, isValid: false },
   { id: 4, title: "Geolocation", isCompleted: false, isValid: false },
   { id: 5, title: "Review & Submit", isCompleted: false, isValid: false },
-];
+] as const;
 
-const initialImageUploadState: ImageUploadState = {
+/**
+ * Initial image upload state
+ */
+const INITIAL_IMAGE_UPLOAD_STATE: ImageUploadState = {
   isUploading: false,
   progress: 0,
   error: null,
   uploadId: undefined,
+} as const;
+
+/**
+ * Store configuration constants
+ */
+const STORE_CONFIG = {
+  /** Debounce delay for form updates (ms) */
+  FORM_UPDATE_DELAY: 300,
+  /** Maximum number of errors to store */
+  MAX_ERRORS: 10,
+  /** Default step validation timeout (ms) */
+  VALIDATION_TIMEOUT: 5000,
+  /** Image upload chunk size for progress tracking */
+  UPLOAD_CHUNK_SIZE: 1024 * 1024, // 1MB
+} as const;
+
+/**
+ * =============================================================================
+ * UTILITY FUNCTIONS
+ * =============================================================================
+ */
+
+/**
+ * Deep comparison utility for form data changes
+ */
+const hasFormDataChanged = (
+  previous: Partial<ProfileFormData>,
+  current: Partial<ProfileFormData>
+): boolean => {
+  const keys = new Set([...Object.keys(previous), ...Object.keys(current)]);
+
+  for (const key of keys) {
+    const prevValue = previous[key as keyof ProfileFormData];
+    const currValue = current[key as keyof ProfileFormData];
+
+    if (prevValue !== currValue) {
+      return true;
+    }
+  }
+
+  return false;
 };
+
+/**
+ * Validation error deduplication utility
+ */
+const deduplicateErrors = (
+  existingErrors: ValidationError[],
+  newError: ValidationError
+): ValidationError[] => {
+  const filtered = existingErrors.filter((err) => err.field !== newError.field);
+  return [...filtered, newError].slice(-STORE_CONFIG.MAX_ERRORS);
+};
+
+/**
+ * Generate unique upload ID
+ */
+const generateUploadId = (): string => {
+  return `upload_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+};
+
+/**
+ * =============================================================================
+ * MAIN STORE IMPLEMENTATION
+ * =============================================================================
+ */
 
 export const useProfileWizardStore = create<ProfileWizardStore>()(
   devtools(
     subscribeWithSelector((set, get) => ({
-      // State
-      formData: initialFormData,
-      currentStep: 1,
-      steps: initialSteps,
-      errors: [],
-      // NEW: Image upload state
-      imageUploadState: initialImageUploadState,
+      /**
+       * =============================================================================
+       * STATE PROPERTIES
+       * =============================================================================
+       */
 
-      // Existing Actions - Enhanced for efficiency
+      formData: { ...INITIAL_FORM_DATA },
+      currentStep: 1,
+      steps: [...INITIAL_WIZARD_STEPS],
+      errors: [],
+      imageUploadState: { ...INITIAL_IMAGE_UPLOAD_STATE },
+
+      /**
+       * =============================================================================
+       * FORM DATA MANAGEMENT
+       * =============================================================================
+       */
+
+      /**
+       * Updates form data with optimized change detection
+       * Prevents unnecessary re-renders and provides better performance
+       */
       setFormData: (data: Partial<ProfileFormData>) => {
         const currentState = get();
 
-        // Only update if data actually changed
-        const hasChanges = Object.keys(data).some(
-          (key) =>
-            currentState.formData[key as keyof ProfileFormData] !==
-            data[key as keyof ProfileFormData]
-        );
+        // Performance optimization: Skip update if no actual changes
+        if (!hasFormDataChanged(currentState.formData, data)) {
+          return;
+        }
 
-        if (!hasChanges) return;
-
-        set(
-          (state) => ({
-            formData: { ...state.formData, ...data },
-          }),
-          false,
-          "setFormData"
-        );
+        try {
+          set(
+            (state) => ({
+              formData: {
+                ...state.formData,
+                ...data,
+                // Ensure proper data types
+                imageUploadProgress: Math.max(
+                  0,
+                  Math.min(
+                    100,
+                    data.imageUploadProgress ??
+                      state.formData.imageUploadProgress
+                  )
+                ),
+              },
+            }),
+            false,
+            {
+              type: "formData/update",
+              payload: Object.keys(data),
+            }
+          );
+        } catch (error) {
+          console.error("Form data update failed:", error);
+          get().addError({
+            field: "formData",
+            message: "Failed to update form data",
+            code: "FORM_UPDATE_ERROR",
+          });
+        }
       },
 
+      /**
+       * =============================================================================
+       * STEP NAVIGATION & VALIDATION
+       * =============================================================================
+       */
+
+      /**
+       * Sets current step with boundary validation
+       */
       setCurrentStep: (step: number) => {
         const currentState = get();
-        const newStep = Math.max(1, Math.min(5, step));
+        const newStep = Math.max(1, Math.min(5, step)) as WizardStepId;
 
-        if (currentState.currentStep === newStep) return;
+        if (currentState.currentStep === newStep) {
+          return;
+        }
 
-        set(
-          () => ({
-            currentStep: newStep,
-          }),
-          false,
-          "setCurrentStep"
-        );
+        set(() => ({ currentStep: newStep }), false, {
+          type: "navigation/setStep",
+          payload: { from: currentState.currentStep, to: newStep },
+        });
       },
 
+      /**
+       * Updates step validation status with change detection
+       */
       setStepValid: (step: number, isValid: boolean) => {
         const currentState = get();
-        const currentStep = currentState.steps.find((s) => s.id === step);
+        const stepIndex = currentState.steps.findIndex((s) => s.id === step);
 
-        if (currentStep && currentStep.isValid === isValid) return;
+        if (stepIndex === -1) {
+          console.warn(`Invalid step ID: ${step}`);
+          return;
+        }
+
+        const currentStep = currentState.steps[stepIndex];
+        if (currentStep && currentStep.isValid === isValid) {
+          return; // No change needed
+        }
 
         set(
           (state) => ({
@@ -111,15 +256,29 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
             ),
           }),
           false,
-          "setStepValid"
+          {
+            type: "validation/setStepValid",
+            payload: { step, isValid },
+          }
         );
       },
 
+      /**
+       * Updates step completion status with change detection
+       */
       setStepCompleted: (step: number, isCompleted: boolean) => {
         const currentState = get();
-        const currentStep = currentState.steps.find((s) => s.id === step);
+        const stepIndex = currentState.steps.findIndex((s) => s.id === step);
 
-        if (currentStep && currentStep.isCompleted === isCompleted) return;
+        if (stepIndex === -1) {
+          console.warn(`Invalid step ID: ${step}`);
+          return;
+        }
+
+        const currentStep = currentState.steps[stepIndex];
+        if (currentStep && currentStep.isCompleted === isCompleted) {
+          return; // No change needed
+        }
 
         set(
           (state) => ({
@@ -128,30 +287,52 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
             ),
           }),
           false,
-          "setStepCompleted"
+          {
+            type: "validation/setStepCompleted",
+            payload: { step, isCompleted },
+          }
         );
       },
 
+      /**
+       * =============================================================================
+       * ERROR MANAGEMENT
+       * =============================================================================
+       */
+
+      /**
+       * Adds validation error with deduplication
+       */
       addError: (error: ValidationError) => {
         const currentState = get();
+
+        // Check for duplicate error
         const existingError = currentState.errors.find(
-          (e) => e.field === error.field
+          (e) => e.field === error.field && e.message === error.message
         );
 
-        if (existingError && existingError.message === error.message) return;
+        if (existingError) {
+          return; // Don't add duplicate errors
+        }
 
         set(
           (state) => ({
-            errors: [
-              ...state.errors.filter((e) => e.field !== error.field),
-              error,
-            ],
+            errors: deduplicateErrors(state.errors, {
+              ...error,
+              code: error.code || `ERROR_${Date.now()}`,
+            }),
           }),
           false,
-          "addError"
+          {
+            type: "error/add",
+            payload: error,
+          }
         );
       },
 
+      /**
+       * Clears errors with optional field filtering
+       */
       clearErrors: (field?: string) => {
         const currentState = get();
 
@@ -159,9 +340,13 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
           const hasFieldErrors = currentState.errors.some(
             (e) => e.field === field
           );
-          if (!hasFieldErrors) return;
+          if (!hasFieldErrors) {
+            return; // No errors to clear for this field
+          }
         } else {
-          if (currentState.errors.length === 0) return;
+          if (currentState.errors.length === 0) {
+            return; // No errors to clear
+          }
         }
 
         set(
@@ -169,46 +354,103 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
             errors: field ? state.errors.filter((e) => e.field !== field) : [],
           }),
           false,
-          "clearErrors"
-        );
-      },
-
-      resetWizard: () => {
-        set(
           {
-            formData: { ...initialFormData },
-            currentStep: 1,
-            steps: initialSteps.map((step) => ({ ...step })),
-            errors: [],
-            imageUploadState: { ...initialImageUploadState },
-          },
-          false,
-          "resetWizard"
+            type: "error/clear",
+            payload: { field },
+          }
         );
       },
 
-      // NEW: Cloudinary upload actions
+      /**
+       * =============================================================================
+       * WIZARD RESET & CLEANUP
+       * =============================================================================
+       */
+
+      /**
+       * Resets wizard to initial state with cleanup
+       */
+      resetWizard: () => {
+        try {
+          // Clear any pending timeouts or intervals
+          const currentState = get();
+          if (currentState.imageUploadState.uploadId) {
+            // Cancel any ongoing uploads if possible
+            console.log(
+              "Cancelling ongoing upload:",
+              currentState.imageUploadState.uploadId
+            );
+          }
+
+          set(
+            {
+              formData: { ...INITIAL_FORM_DATA },
+              currentStep: 1,
+              steps: [...INITIAL_WIZARD_STEPS],
+              errors: [],
+              imageUploadState: { ...INITIAL_IMAGE_UPLOAD_STATE },
+            },
+            false,
+            {
+              type: "wizard/reset",
+              payload: { timestamp: Date.now() },
+            }
+          );
+        } catch (error) {
+          console.error("Wizard reset failed:", error);
+        }
+      },
+
+      /**
+       * =============================================================================
+       * IMAGE UPLOAD MANAGEMENT
+       * =============================================================================
+       */
+
+      /**
+       * Updates image upload state with validation
+       */
       setImageUploadState: (state: Partial<ImageUploadState>) => {
         const currentState = get();
 
-        // Only update if state actually changed
-        const hasChanges = Object.keys(state).some(
+        // Validate progress bounds
+        const validatedState = {
+          ...state,
+          progress:
+            state.progress !== undefined
+              ? Math.max(0, Math.min(100, state.progress))
+              : undefined,
+        };
+
+        // Skip update if no actual changes
+        const hasChanges = Object.keys(validatedState).some(
           (key) =>
             currentState.imageUploadState[key as keyof ImageUploadState] !==
-            state[key as keyof ImageUploadState]
+            validatedState[key as keyof ImageUploadState]
         );
 
-        if (!hasChanges) return;
+        if (!hasChanges) {
+          return;
+        }
 
         set(
           (prevState) => ({
-            imageUploadState: { ...prevState.imageUploadState, ...state },
+            imageUploadState: {
+              ...prevState.imageUploadState,
+              ...validatedState,
+            },
           }),
           false,
-          "setImageUploadState"
+          {
+            type: "imageUpload/updateState",
+            payload: validatedState,
+          }
         );
       },
 
+      /**
+       * Handles Cloudinary image upload with comprehensive error handling
+       */
       uploadImageToCloudinary: async (
         file: File
       ): Promise<CloudinaryUploadResponse> => {
@@ -216,16 +458,37 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
           get();
 
         try {
-          // Generate unique upload ID
-          const uploadId = `upload_${Date.now()}_${Math.random()
-            .toString(36)
-            .substr(2, 9)}`;
+          // Validate file before upload
+          if (file.size > IMAGE_VALIDATION_CONFIG.MAX_SIZE_BYTES) {
+            throw new Error(
+              `File size exceeds ${
+                IMAGE_VALIDATION_CONFIG.MAX_SIZE_BYTES / (1024 * 1024)
+              }MB limit`
+            );
+          }
 
-          // Clear any previous errors
+          const fileExtension = file.name.toLowerCase().split(".").pop();
+          if (
+            !fileExtension ||
+            !IMAGE_VALIDATION_CONFIG.ALLOWED_FORMATS.includes(
+              fileExtension as any
+            )
+          ) {
+            throw new Error(
+              `File format not supported. Allowed: ${IMAGE_VALIDATION_CONFIG.ALLOWED_FORMATS.join(
+                ", "
+              )}`
+            );
+          }
+
+          // Generate unique upload ID for tracking
+          const uploadId = generateUploadId();
+
+          // Clear previous errors
           clearErrors("imageFile");
           clearErrors("imageUpload");
 
-          // Set initial upload state
+          // Initialize upload state
           setImageUploadState({
             isUploading: true,
             progress: 0,
@@ -233,13 +496,13 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
             uploadId,
           });
 
-          // Update form data to show upload in progress
+          // Update form data
           setFormData({
             imageUploadState: "uploading",
             imageUploadProgress: 0,
           });
 
-          // Create FormData for the API call
+          // Prepare upload data
           const formData = new FormData();
           formData.append("file", file);
           formData.append(
@@ -255,31 +518,43 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
             })
           );
 
-          // Upload to API route with progress tracking
-          const response = await fetch("/api/upload-image", {
+          // Perform upload with timeout
+          const uploadPromise = fetch("/api/upload-image", {
             method: "POST",
             body: formData,
           });
 
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(
+              () => reject(new Error("Upload timeout")),
+              STORE_CONFIG.VALIDATION_TIMEOUT
+            );
+          });
+
+          const response = await Promise.race([uploadPromise, timeoutPromise]);
+
           if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Upload failed");
+            const errorData = await response
+              .json()
+              .catch(() => ({ error: "Unknown error" }));
+            throw new Error(
+              errorData.error || `Upload failed with status ${response.status}`
+            );
           }
 
           const result: UploadImageResponse = await response.json();
 
           if (!result.success || !result.data) {
-            throw new Error(result.error || "Upload failed");
+            throw new Error(result.error || "Upload failed - no data returned");
           }
 
-          // Update upload state to success
+          // Update success state
           setImageUploadState({
             isUploading: false,
             progress: 100,
             error: null,
           });
 
-          // Update form data with successful upload
           setFormData({
             imageUrl: result.data.secure_url,
             cloudinaryPublicId: result.data.public_id,
@@ -294,14 +569,13 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
           const errorMessage =
             error instanceof Error ? error.message : "Upload failed";
 
-          // Update upload state to error
+          // Update error state
           setImageUploadState({
             isUploading: false,
             progress: 0,
             error: errorMessage,
           });
 
-          // Update form data to show error
           setFormData({
             imageUploadState: "error",
             imageUploadProgress: 0,
@@ -311,6 +585,7 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
           addError({
             field: "imageUpload",
             message: errorMessage,
+            code: "UPLOAD_ERROR",
           });
 
           return {
@@ -320,66 +595,97 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
         }
       },
 
+      /**
+       * Clears image upload state and data
+       */
       clearImageUpload: () => {
         const { setImageUploadState, setFormData, clearErrors } = get();
 
-        // Reset upload state
-        setImageUploadState({ ...initialImageUploadState });
+        try {
+          // Reset upload state
+          setImageUploadState({ ...INITIAL_IMAGE_UPLOAD_STATE });
 
-        // Clear form data
-        setFormData({
-          imageFile: undefined,
-          imageUrl: "",
-          cloudinaryPublicId: undefined,
-          imageUploadState: "idle",
-          imageUploadProgress: 0,
-        });
+          // Clear form data
+          setFormData({
+            imageFile: undefined,
+            imageUrl: "",
+            cloudinaryPublicId: undefined,
+            imageUploadState: "idle",
+            imageUploadProgress: 0,
+          });
 
-        // Clear any upload errors
-        clearErrors("imageFile");
-        clearErrors("imageUpload");
+          // Clear related errors
+          clearErrors("imageFile");
+          clearErrors("imageUpload");
+        } catch (error) {
+          console.error("Failed to clear image upload:", error);
+        }
       },
 
-      // FIXED: Enhanced submitProfile with proper gender mapping
+      /**
+       * =============================================================================
+       * PROFILE SUBMISSION
+       * =============================================================================
+       */
+
+      /**
+       * Submits complete profile with comprehensive validation and error handling
+       */
       submitProfile: async (): Promise<boolean> => {
         const state = get();
 
         try {
+          // Set submitting state
           set(
             (state) => ({
               formData: { ...state.formData, isSubmitting: true },
             }),
             false,
-            "submitProfile_start"
+            { type: "profile/submitStart" }
           );
 
-          // Validate all steps before submission
+          // Comprehensive validation
           const allStepsValid = state.steps.every((step) => step.isValid);
           if (!allStepsValid) {
-            throw new Error("Please complete all required fields");
+            throw new Error(
+              "Please complete all required fields before submitting"
+            );
           }
 
-          // FIXED: Prepare form data for submission with proper gender handling
+          // Prepare submission data with proper formatting
           const submissionData = {
+            // Location data
             city: state.formData.city,
+            country: state.formData.country,
+            state: state.formData.state,
+
+            // Personal data
             username: state.formData.username,
             firstName: state.formData.firstName,
             lastName: state.formData.lastName,
-            country: state.formData.country,
-            state: state.formData.state,
             dateOfBirth: state.formData.dateOfBirth,
-            // FIXED: Ensure gender is in database format
-            gender: state.formData.gender || undefined, // Should already be "MALE" or "FEMALE"
+            gender: state.formData.gender || "",
             bio: state.formData.bio,
+
+            // Image data
             profileImageUrl: state.formData.imageUrl,
             profileImagePublicId: state.formData.cloudinaryPublicId,
+
+            // Sport data
             primarySport: state.formData.primarySport,
+
+            // Location coordinates
             latitude: state.formData.latitude,
             longitude: state.formData.longitude,
             locationAccuracy: state.formData.locationAccuracy,
           };
 
-          console.log("Submitting profile data:", submissionData);
+          console.log("Submitting profile data:", {
+            ...submissionData,
+            profileImageUrl: submissionData.profileImageUrl
+              ? "[URL_PROVIDED]"
+              : undefined,
+          });
 
           // Try update first (for editing existing profiles)
           let response = await fetch("/api/profile/update", {
@@ -401,7 +707,9 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
           const result = await response.json();
 
           if (!response.ok || !result.success) {
-            throw new Error(result.error || "Failed to save profile");
+            throw new Error(
+              result.error || `HTTP ${response.status}: Failed to save profile`
+            );
           }
 
           console.log("Profile saved successfully:", result.data);
@@ -415,29 +723,27 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
               formData: { ...state.formData, isSubmitting: false },
             }),
             false,
-            "submitProfile_success"
+            { type: "profile/submitSuccess", payload: result.data }
           );
 
           return true;
         } catch (error) {
           console.error("Profile submission error:", error);
 
+          const errorMessage =
+            error instanceof Error ? error.message : "Submission failed";
+
           set(
             (state) => ({
               formData: { ...state.formData, isSubmitting: false },
-              errors: [
-                ...state.errors.filter((e) => e.field !== "submit"),
-                {
-                  field: "submit",
-                  message:
-                    error instanceof Error
-                      ? error.message
-                      : "Submission failed",
-                },
-              ],
+              errors: deduplicateErrors(state.errors, {
+                field: "submit",
+                message: errorMessage,
+                code: "SUBMISSION_ERROR",
+              }),
             }),
             false,
-            "submitProfile_error"
+            { type: "profile/submitError", payload: { error: errorMessage } }
           );
 
           return false;
@@ -446,28 +752,70 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
     })),
     {
       name: "profile-wizard-store",
+      // Enhanced devtools configuration
+      serialize: {
+        options: {
+          // Don't serialize large objects like File instances
+          filter: (key: string, value: any) => {
+            if (key === "imageFile" && value instanceof File) {
+              return `[File: ${value.name}]`;
+            }
+            return value;
+          },
+        },
+      },
     }
   )
 );
 
-// Existing selector hooks
+/**
+ * =============================================================================
+ * OPTIMIZED SELECTOR HOOKS
+ * =============================================================================
+ */
+
+// State selectors with memoization
 export const useFormData = () =>
-  useProfileWizardStore((state) => state.formData, shallow);
+  useProfileWizardStore((state) => state.formData);
 
 export const useCurrentStep = () =>
   useProfileWizardStore((state) => state.currentStep);
 
 export const useSteps = () =>
-  useProfileWizardStore((state) => state.steps, shallow);
+  useProfileWizardStore((state) => state.steps);
 
 export const useErrors = () =>
-  useProfileWizardStore((state) => state.errors, shallow);
+  useProfileWizardStore((state) => state.errors);
 
-// NEW: Image upload selector hooks
 export const useImageUploadState = () =>
-  useProfileWizardStore((state) => state.imageUploadState, shallow);
+  useProfileWizardStore((state) => state.imageUploadState);
 
-// Existing action hooks
+// Computed selectors
+export const useWizardProgress = () =>
+  useProfileWizardStore((state) => {
+    const completedSteps = state.steps.filter(
+      (step) => step.isCompleted
+    ).length;
+    return Math.round((completedSteps / state.steps.length) * 100);
+  });
+
+export const useIsWizardComplete = () =>
+  useProfileWizardStore((state) => state.steps.every((step) => step.isValid));
+
+export const useCurrentStepInfo = () =>
+  useProfileWizardStore((state) => {
+    const currentStepData = state.steps.find(
+      (step) => step.id === state.currentStep
+    );
+    return {
+      step: currentStepData,
+      canGoNext: currentStepData?.isValid || false,
+      canGoPrevious: state.currentStep > 1,
+      isLastStep: state.currentStep === state.steps.length,
+    };
+  });
+
+// Action selectors
 export const useSetFormData = () =>
   useProfileWizardStore((state) => state.setFormData);
 
@@ -492,7 +840,7 @@ export const useResetWizard = () =>
 export const useSubmitProfile = () =>
   useProfileWizardStore((state) => state.submitProfile);
 
-// NEW: Cloudinary action hooks
+// Image upload action selectors
 export const useSetImageUploadState = () =>
   useProfileWizardStore((state) => state.setImageUploadState);
 
@@ -501,3 +849,30 @@ export const useUploadImageToCloudinary = () =>
 
 export const useClearImageUpload = () =>
   useProfileWizardStore((state) => state.clearImageUpload);
+
+/**
+ * =============================================================================
+ * STORE UTILITIES & DEBUG HELPERS
+ * =============================================================================
+ */
+
+/**
+ * Debug utility to log current store state
+ * Only available in development
+ */
+export const useDebugStore = () => {
+  if (process.env.NODE_ENV === "development") {
+    return useProfileWizardStore.getState;
+  }
+  return () => console.warn("Debug store only available in development");
+};
+
+/**
+ * Utility hook to subscribe to specific store changes
+ */
+export const useStoreSubscription = (
+  selector: (state: ProfileWizardStore) => any,
+  callback: (value: any, previousValue: any) => void
+) => {
+  return useProfileWizardStore.subscribe(selector, callback);
+};

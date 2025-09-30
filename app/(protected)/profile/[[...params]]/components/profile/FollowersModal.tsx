@@ -13,7 +13,7 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
-import { useDebounce } from "@/hooks/useDebounceSearch";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface UserItem {
   id: string;
@@ -295,6 +295,7 @@ const FollowersModal: React.FC<FollowersModalProps> = ({
               </p>
             </div>
             <button
+              title="Close modal"
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
             >

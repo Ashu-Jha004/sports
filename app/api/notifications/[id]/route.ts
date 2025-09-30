@@ -1,6 +1,11 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+// api/notifications/[id]/route.ts (OPTIMIZED)
+import { NextRequest } from "next/server";
+import { notificationService } from "@/lib/api/services/notification-service";
+import {
+  handleApiError,
+  createApiResponse,
+} from "@/lib/api/utils/response-utils";
+import { authenticateUser } from "@/lib/api/middleware/auth";
 
 interface RouteParams {
   params: Promise<{
@@ -8,117 +13,57 @@ interface RouteParams {
   }>;
 }
 
-// PATCH - Mark specific notification as read
+// PATCH - Mark specific notification as read (OPTIMIZED)
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  console.log("🔔 Mark specific notification as read request");
+
   try {
-    const user = await currentUser();
+    // Step 1: Authentication
+    const user = await authenticateUser();
 
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
+    // Step 2: Get notification ID
     const { id } = await params;
+    console.log("📧 Notification ID:", id);
 
-    // Get current user from database
-    const currentUserData = await prisma.user.findUnique({
-      where: { clerkId: user.id },
-    });
+    // Step 3: Mark as read via service
+    const result = await notificationService.markAsRead(user.id, id);
 
-    if (!currentUserData) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 }
-      );
-    }
+    console.log("✅ Notification marked as read");
 
-    // Update specific notification
-    const notification = await prisma.notification.updateMany({
-      where: {
-        id: id,
-        userId: currentUserData.id,
-      },
-      data: {
-        isRead: true,
-      },
-    });
-
-    if (notification.count === 0) {
-      return NextResponse.json(
-        { success: false, error: "Notification not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        message: "Notification marked as read",
-      },
+    // Step 4: Success response
+    return createApiResponse({
+      message: "Notification marked as read",
+      notification: result.notification,
     });
   } catch (error) {
-    console.error("Mark notification read error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to mark notification as read" },
-      { status: 500 }
-    );
+    console.error("❌ Failed to mark notification as read:", error);
+    return handleApiError(error, "mark notification as read");
   }
 }
 
-// DELETE - Delete specific notification
+// DELETE - Delete specific notification (OPTIMIZED)
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  console.log("🗑️ Delete notification request");
+
   try {
-    const user = await currentUser();
+    // Step 1: Authentication
+    const user = await authenticateUser();
 
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
+    // Step 2: Get notification ID
     const { id } = await params;
+    console.log("📧 Notification ID to delete:", id);
 
-    // Get current user from database
-    const currentUserData = await prisma.user.findUnique({
-      where: { clerkId: user.id },
-    });
+    // Step 3: Delete via service
+    await notificationService.deleteNotification(user.id, id);
 
-    if (!currentUserData) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 }
-      );
-    }
+    console.log("✅ Notification deleted");
 
-    // Delete specific notification
-    const deletedNotification = await prisma.notification.deleteMany({
-      where: {
-        id: id,
-        userId: currentUserData.id,
-      },
-    });
-
-    if (deletedNotification.count === 0) {
-      return NextResponse.json(
-        { success: false, error: "Notification not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        message: "Notification deleted",
-      },
+    // Step 4: Success response
+    return createApiResponse({
+      message: "Notification deleted",
     });
   } catch (error) {
-    console.error("Delete notification error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to delete notification" },
-      { status: 500 }
-    );
+    console.error("❌ Failed to delete notification:", error);
+    return handleApiError(error, "delete notification");
   }
 }

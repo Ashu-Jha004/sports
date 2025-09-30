@@ -30,8 +30,8 @@ interface ProfileData {
   state: string | null;
   country: string | null;
   location: {
-    lat: number | null;
-    lon: number | null;
+    lat: number | 0;
+    lon: number | 0;
     city: string | null;
     state: string | null;
     country: string | null;

@@ -44,6 +44,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     }
   };
 
+  
+
   // Format time
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -133,5 +135,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     </div>
   );
 };
+
+
 
 export default NotificationItem;

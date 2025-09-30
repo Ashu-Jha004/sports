@@ -32,12 +32,12 @@ interface ProfileData {
   state: string | null;
   country: string | null;
   location: {
-    lat: number | null;
-    lon: number | null;
-    city: string | null;
-    state: string | null;
-    country: string | null;
-  } | null;
+    lat: number | 0;
+    lon: number | 0;
+    city: string | "";
+    state: string | "";
+    country: string | "";
+  };
   dateOfBirth: string | null;
   gender: string | null;
   email: string | null;

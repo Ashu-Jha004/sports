@@ -1,154 +1,101 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+// api/notifications/route.ts (OPTIMIZED)
+import { NextRequest } from "next/server";
+import { notificationService } from "@/lib/api/services/notification-service";
+import { validateApiRequest } from "@/lib/api/middleware/validation";
+import {
+  handleApiError,
+  createApiResponse,
+} from "@/lib/api/utils/response-utils";
+import { authenticateUser } from "@/lib/api/middleware/auth";
+import { z } from "zod";
 
-// GET - Fetch user's notifications
+/**
+ * =============================================================================
+ * NOTIFICATIONS API ENDPOINT (OPTIMIZED)
+ * =============================================================================
+ */
+
+// Query parameters validation schema
+const notificationQuerySchema = z.object({
+  limit: z.number().min(1).max(50).default(20),
+  offset: z.number().min(0).default(0),
+  unreadOnly: z.boolean().default(false),
+});
+
+// GET - Fetch user's notifications (FIXED for compatibility)
 export async function GET(request: NextRequest) {
+  console.log("🔔 Notifications fetch request received");
+
   try {
-    const user = await currentUser();
+    // Step 1: Authentication
+    const user = await authenticateUser();
 
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
-    // Get current user from database
-    const currentUserData = await prisma.user.findUnique({
-      where: { clerkId: user.id },
-    });
-
-    if (!currentUserData) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 }
-      );
-    }
-
+    // Step 2: Parse and validate query parameters
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+
+    // FIXED: Support both page/offset pagination for compatibility
+    const rawLimit = parseInt(searchParams.get("limit") || "20");
+    const rawOffset = parseInt(searchParams.get("offset") || "0");
+    const rawPage = parseInt(searchParams.get("page") || "1");
     const unreadOnly = searchParams.get("unreadOnly") === "true";
 
-    // Build where clause
-    const whereClause: any = {
-      userId: currentUserData.id,
+    // Convert page-based to offset-based if needed
+    const limit = Math.min(Math.max(rawLimit, 1), 50);
+    const offset = rawOffset > 0 ? rawOffset : (rawPage - 1) * limit;
+
+    const queryParams = {
+      limit,
+      offset,
+      unreadOnly,
     };
 
-    if (unreadOnly) {
-      whereClause.isRead = false;
-    }
+    console.log("📊 Query params:", queryParams);
 
-    // Fetch notifications with pagination
-    const [notifications, totalCount, unreadCount] = await Promise.all([
-      prisma.notification.findMany({
-        where: whereClause,
-        include: {
-          actor: {
-            select: {
-              id: true,
-              username: true,
-              firstName: true,
-              lastName: true,
-              profileImageUrl: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.notification.count({
-        where: { userId: currentUserData.id },
-      }),
-      prisma.notification.count({
-        where: {
-          userId: currentUserData.id,
-          isRead: false,
-        },
-      }),
-    ]);
+    // Step 3: Fetch notifications via service
+    const result = await notificationService.getUserNotifications(
+      user.id,
+      queryParams
+    );
 
-    const totalPages = Math.ceil(totalCount / limit);
+    console.log("✅ Notifications fetched:", {
+      count: result.notifications.length,
+      unreadCount: result.unreadCount,
+    });
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        notifications: notifications.map((notification) => ({
-          ...notification,
-          createdAt: notification.createdAt.toISOString(),
-          updatedAt: notification.updatedAt.toISOString(),
-        })),
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalCount,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-          limit,
-        },
-        unreadCount,
-      },
+    // Step 4: FIXED - Return response format compatible with useNotifications hook
+    return createApiResponse({
+      notifications: result.notifications,
+      unreadCount: result.unreadCount,
+      total: result.total,
+      hasMore: result.hasMore,
+      pagination: result.pagination,
     });
   } catch (error) {
-    console.error("Fetch notifications error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch notifications" },
-      { status: 500 }
-    );
+    console.error("❌ Failed to fetch notifications:", error);
+    return handleApiError(error, "notification fetch");
   }
 }
 
-// PATCH - Mark all notifications as read
+// PATCH - Mark all notifications as read (OPTIMIZED)
 export async function PATCH(request: NextRequest) {
+  console.log("🔔 Mark all notifications as read request");
+
   try {
-    const user = await currentUser();
+    // Step 1: Authentication
+    const user = await authenticateUser();
 
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      );
-    }
+    // Step 2: Mark all as read via service
+    const result = await notificationService.markAllAsRead(user.id);
 
-    // Get current user from database
-    const currentUserData = await prisma.user.findUnique({
-      where: { clerkId: user.id },
-    });
+    console.log("✅ All notifications marked as read:", result.updatedCount);
 
-    if (!currentUserData) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    // Mark all notifications as read
-    const updatedNotifications = await prisma.notification.updateMany({
-      where: {
-        userId: currentUserData.id,
-        isRead: false,
-      },
-      data: {
-        isRead: true,
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        message: "All notifications marked as read",
-        updatedCount: updatedNotifications.count,
-      },
+    // Step 3: Success response
+    return createApiResponse({
+      message: "All notifications marked as read",
+      updatedCount: result.updatedCount,
     });
   } catch (error) {
-    console.error("Mark all notifications read error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to mark notifications as read" },
-      { status: 500 }
-    );
+    console.error("❌ Failed to mark all notifications as read:", error);
+    return handleApiError(error, "mark all notifications as read");
   }
 }

@@ -8,7 +8,7 @@ import {
   UserCircleIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
-import { useDebounce } from "@/hooks/useDebounceSearch";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface SearchUser {
   id: string;
@@ -235,7 +235,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
         {/* Clear Button */}
         {query && (
-          <button
+          <button title="Clear search"
             onClick={clearSearch}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 transition-colors"
           >
