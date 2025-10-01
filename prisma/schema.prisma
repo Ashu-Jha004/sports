@@ -1,3 +1,7 @@
+// =============================================================================
+// PRISMA CONFIGURATION
+// =============================================================================
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,6 +11,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// =============================================================================
+// ENUMS - System status and type definitions
+// =============================================================================
+
+// User ranking system for gamification
 enum Rank {
   KING
   PAWN
@@ -15,6 +24,35 @@ enum Rank {
   BISHOP
   QUEEN
 }
+enum AdminRole {
+  FOUNDER
+  CO_FOUNDER
+  ADMIN
+  MODERATOR_ADMIN
+}
+
+// User classification levels
+enum Class {
+  A
+  B
+  C
+  D
+  E
+}
+
+// Primary user roles in the system
+enum Role {
+   ATHLETE
+  BUSINESS
+}
+
+// Gender options
+enum GENDER {
+ MALE
+ FEMALE
+}
+
+// Notification categories
 enum NotificationType {
   STAT_UPDATE_REQUEST
   STAT_UPDATE_APPROVED
@@ -33,37 +71,61 @@ enum NotificationType {
   LIKE
   COMMENT
 }
-enum UpdateStatus {
+
+// Request status tracking
+enum RequestStatus {
   PENDING
-  APPROVED
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+// Physical evaluation session status
+enum EvaluationStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Access permission status
+enum AccessStatus {
+  REQUESTED
+  GRANTED
   EXPIRED
-  CANCELED
+  REVOKED
+}
+
+// Stats update approval status
+enum StatsUpdateStatus {
+  PENDING_REVIEW
+  ACCEPTED
   REJECTED
 }
 
+// Social relationship status
 enum FriendshipStatus {
   PENDING
   ACCEPTED
   BLOCKED
 }
 
-enum Class {
-  A
-  B
-  C
-  D
-  E
+// Payment processing status
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  CANCELLED
 }
 
-enum Role {
-  ATHLETE
-  BUSINESS
-}
-enum GENDER {
- MALE
- FEMALE
-}
+// =============================================================================
+// CORE USER MODELS - Main user and profile data
+// =============================================================================
 
+// Main user model - represents all system users
 model User {
   id              String    @id @default(cuid())
   clerkId         String    @unique
@@ -77,32 +139,63 @@ model User {
   deletedAt       DateTime?
   version         Int?      @default(1)
   PrimarySport    String?
-  role            Role      @default(ATHLETE)
+  role            Role      @default( ATHLETE)
+  roles           String[]
   dateOfBirth     DateTime?
-  Rank            Rank?     @default(PAWN)
-  Class           Class?    @default(E)
+  Rank            Rank     @default(PAWN)
+  Class           Class    @default(E)
   country         String?
   state           String?
   city            String?
+  isAdmin         Boolean   @default(false)
+  adminRole       AdminRole?
+  adminGrantedBy  String?   // ID of admin who granted this role
+  adminGrantedAt  DateTime?
+  
   gender        GENDER?
   profile       Profile?
-  // stats         Stats?
+  Guide       Guide?
+  stats         Stats?
   followers     Follow[]               @relation("UserFollowers")
   following     Follow[]               @relation("UserFollowing")
   counters      UserCounters?
-  // statRequests  StatUpdateRequest[]    @relation("AthleteRequests")
+  // Evaluation requests sent by this user
+  evaluationRequests PhysicalEvaluationRequest[]
+  // Stats access permissions granted to guides
+  statsAccessPermissions StatsAccessPermission[]
+    // Stats updates received from guides
+  statsUpdates StatsUpdate[]
+  
   // bookings      Booking[]              @relation("UserBookings")
-  // payments      Payment[]              @relation("AthletePayments")
-  // reviews       Review[]               @relation("UserReviews")
+   // ADD PAYMENT RELATIONSHIP:
+  paymentsAsPayer   Payment[] @relation("PayerPayments")   // When user pays
+  paymentsAsPayee   Payment[] @relation("PayeePayments")   // When user receives payment
+
   notifications Notification[]         @relation("UserNotifications")
-  // posts         Post[]                 @relation("UserPosts")
-  // likes         Reaction[]             @relation("UserReactions")
-  // comments      Comment[]              @relation("UserComments")
-  // media         Media[]                @relation("UserMedia")
+
   actorNotifications Notification[]    @relation("NotificationActor")
 
   @@index([createdAt, username])
 }
+
+model AdminAction {
+  id               String   @id @default(cuid())
+  adminUserId      String   // Admin who performed the action
+  action           String   // "APPROVE_MODERATOR", "GRANT_ADMIN", etc.
+  targetUserId     String?  // User affected by the action
+  targetResource   String?  // "MODERATOR_APPLICATION", "USER", etc.
+  targetResourceId String?  // ID of the affected resource
+  details          Json?    // Additional action details
+  ipAddress        String?
+  userAgent        String?
+  createdAt        DateTime @default(now())
+  
+  @@map("admin_actions")
+  @@index([adminUserId, createdAt])
+  @@index([action, createdAt])
+}
+
+// Extended profile information for users
 model Profile {
   id          String     @id @default(uuid())
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -114,30 +207,274 @@ model Profile {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
-model Location {
-  id         String     @id @default(uuid())
-  state      String
+
+// =============================================================================
+// ATHLETIC STATISTICS MODELS - Performance tracking and metrics
+// =============================================================================
+
+//user Stats
+model Stats {
+  id                String   @id @default(uuid())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String   @unique
+  height            Float?
+  weight            Float?
+  age               Int?
+  bodyFat           Float?
+  injuries          InjuryStat[]             @relation("InjuryStats") 
+  strength          StrengthAndPower?        @relation("StrengthAndPowerRelation")
+  speed             SpeedAndAgility?         @relation("SpeedAndAgilityRelation")
+  stamina           StaminaAndRecovery?      @relation("StaminaAndRecoveryRelation")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+ // Metadata for tracking updates
+  lastUpdatedBy   String?  // guide ID who last updated
+  lastUpdatedAt   DateTime?
+  lastUpdatedByName String? // For display purposes
+   history StatsHistory[]
+     @@map("user_stats")
+  @@index([userId])
+}
+
+// Individual injury tracking records
+model InjuryStat {
+  id          String   @id @default(uuid())
+  statId      String
+  stats       Stats    @relation("InjuryStats", fields: [statId], references: [id], onDelete: Cascade)
+  type        String
+  bodyPart    String
+  severity    String
+  occurredAt  DateTime
+  recoveryTime Int?
+  recoveredAt DateTime?
+  status      String   @default("active")
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([statId])
+}
+
+// Cardiovascular and recovery metrics
+model StaminaAndRecovery {
+  id           String   @id @default(uuid())
+  statId       String   @unique
+  stats        Stats    @relation("StaminaAndRecoveryRelation", fields: [statId], references: [id], onDelete: Cascade)
+  vo2Max       Float
+  flexibility  Float
+  recoveryTime Float
+  @@index([statId])
+}
+
+// Speed and agility performance metrics
+model SpeedAndAgility {
+  id             String   @id @default(uuid())
+  statId         String   @unique
+  stats          Stats    @relation("SpeedAndAgilityRelation", fields: [statId], references: [id], onDelete: Cascade)
+  sprintSpeed    Float
+  acceleration   Float
+  agility        Float
+  reactionTime   Float
+  balance        Float
+  coordination   Float
+  @@index([statId])
+}
+
+// Strength and power performance metrics
+model StrengthAndPower {
+  id                  String   @id @default(uuid())
+  statId              String   @unique
+  stats               Stats    @relation("StrengthAndPowerRelation", fields: [statId], references: [id], onDelete: Cascade)
+  strength            Float
+  muscleMass          Float
+  enduranceStrength   Float
+  explosivePower      Float
+  @@index([statId])
+}
+
+// Complete audit trail of statistics changes
+model StatsHistory {
+  id            String @id @default(cuid())
+  StatsId String
+  
+  stats Stats @relation(fields: [StatsId], references: [id], onDelete: Cascade)
+  
+  // What was changed
+  fieldName    String
+  oldValue     String?
+  newValue     String?
+  
+  // Who made the change
+  updatedBy     String  // guide ID
+  updatedByName String  // guide name for display
+  
+  createdAt DateTime @default(now())
+  
+  @@map("stats_history")
+}
+
+// =============================================================================
+// GUIDE AND EVALUATION SYSTEM - Professional evaluation workflow
+// =============================================================================
+
+// Guide/trainer profiles for professional evaluations
+model Guide{
+ id          String     @id @default(uuid())
+ user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+ userId      String     @unique
+ guideEmail  String?    @unique
+ documents   String[]
+ PrimarySports String?  
+ Sports      String[]
+ Experience Int?
+  state      String?
   lat        Float?
   lon        Float?
   city       String?
   country    String?
-  createdAt  DateTime   @default(now())
-
-  profiles   Profile[]
-  // facilities Facility[]
-  // moderators Moderator[]
-  // statUpdateRequests StatUpdateRequest[] // ← added opposite relation
-
-  @@index([country, city,state])
+  // Evaluation requests received by this guide
+  evaluationRequests PhysicalEvaluationRequest[]
+  
+  // Evaluation details sent by this guide
+  evaluationDetails EvaluationDetails[]
+  
+  // Stats access requests sent by this guide
+  statsAccessRequests StatsAccessRequest[]
+    // Stats access permissions received from users
+  statsAccessPermissions StatsAccessPermission[]
+  
+  // Stats updates created by this guide
+  statsUpdates StatsUpdate[]
+   paymentsAsPayee         Payment[] @relation("guidePayments")
+  
+ createdAt   DateTime   @default(now())
+ updatedAt   DateTime   @updatedAt
+  @@map("Guide")
 }
-model UserCounters {
-  userId         String   @id
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  followersCount Int      @default(0)
-  followingCount Int      @default(0)
-  postsCount     Int      @default(0)
-  updatedAt      DateTime @updatedAt
+
+// Initial evaluation request from user to guide
+model PhysicalEvaluationRequest {
+  id          String        @id @default(cuid())
+  userId   String
+  guideId String
+  status      RequestStatus @default(PENDING)
+  message     String?       // Optional message from user
+  
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guide Guide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  
+  // Related evaluation details (if accepted)
+  evaluationDetails EvaluationDetails?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("physical_evaluation_requests")
 }
+
+// Evaluation details sent by guide after accepting request
+model EvaluationDetails {
+  id                    String            @id @default(cuid())
+  evaluationRequestId   String            @unique
+  guideId          String
+  status               EvaluationStatus  @default(SCHEDULED)
+  
+  // Evaluation details
+  location        String
+  scheduledDate   DateTime
+  scheduledTime   String
+  equipment       String[]  // Array of required equipment
+  price          Float
+  verificationId String    @unique // For verification at meeting
+  notes          String?
+    // ADD THESE PAYMENT-RELATED FIELDS:
+  requiresPayment      Boolean           @default(true)
+  paymentDueDate       DateTime?         // When payment must be completed
+  paymentStatus        PaymentStatus     @default(PENDING)
+  paymentCompletedAt   DateTime?
+    // ADD PAYMENT RELATIONSHIP:
+  payment            Payment?                  // One-to-one with Payment
+  evaluationRequest PhysicalEvaluationRequest @relation(fields: [evaluationRequestId], references: [id], onDelete: Cascade)
+  guide        Guide                  @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  
+  // Related stats access request (after verification)
+  statsAccessRequest StatsAccessRequest?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("evaluation_details")
+}
+
+// Stats access request from guide to user (after verification)
+model StatsAccessRequest {
+  id                  String       @id @default(cuid())
+  evaluationDetailsId String       @unique
+  guideId        String
+  userId          String
+  status             AccessStatus @default(REQUESTED)
+  message            String?
+  
+  evaluationDetails EvaluationDetails @relation(fields: [evaluationDetailsId], references: [id], onDelete: Cascade)
+  guide        Guide         @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  
+  // Related permission (if granted)
+  permission StatsAccessPermission?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("stats_access_requests")
+}
+
+// Permission granted by user to guide for stats access
+model StatsAccessPermission {
+  id                    String       @id @default(cuid())
+  statsAccessRequestId  String       @unique
+  userId            String
+  guideId          String
+  status               AccessStatus @default(GRANTED)
+  expiresAt            DateTime?    // Optional expiration
+  
+  statsAccessRequest StatsAccessRequest @relation(fields: [statsAccessRequestId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guide         Guide          @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  
+  // Related stats update (when guide submits changes)
+  statsUpdate StatsUpdate?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("stats_access_permissions")
+}
+
+// Stats update submitted by guide for user review
+model StatsUpdate {
+  id                      String              @id @default(cuid())
+  statsAccessPermissionId String              @unique
+  userId              String
+  guideId            String
+  status                 StatsUpdateStatus   @default(PENDING_REVIEW)
+  
+  // Updated stats data (JSON for flexibility)
+  updatedStats Json
+  notes        String?
+  
+  statsAccessPermission StatsAccessPermission @relation(fields: [statsAccessPermissionId], references: [id], onDelete: Cascade)
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guide            Guide             @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("stats_updates")
+}
+
+// =============================================================================
+// SOCIAL FEATURES - Following, notifications, and user interactions
+// =============================================================================
+
+// User follow relationships for social networking
 model Follow {
   id          String   @id @default(uuid())
   follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
@@ -149,6 +486,18 @@ model Follow {
   @@unique([followerId, followingId])
   @@index([followingId, followerId])
 }
+
+// Cached counters for user social metrics
+model UserCounters {
+  userId         String   @id
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  followersCount Int      @default(0)
+  followingCount Int      @default(0)
+  postsCount     Int      @default(0)
+  updatedAt      DateTime @updatedAt
+}
+
+// System-wide notification management
 model Notification {
   id           String           @id @default(uuid())
   userId       String           // Changed from Int to String to match User.id
@@ -164,4 +513,81 @@ model Notification {
   updatedAt    DateTime         @updatedAt
   
   @@index([userId, isRead])
+}
+
+// =============================================================================
+// PAYMENT SYSTEM - Financial transactions and billing
+// =============================================================================
+
+// Payment records for evaluation services
+model Payment {
+  id              String        @id @default(cuid())
+  evaluationId    String        @unique  // One payment per evaluation
+  
+  // Payer (user) information
+  payerId         String        // User ID of user
+  payeruserId  String        // user profile ID
+  
+  // Payee (guide) information  
+  payeeId         String        // User ID of guide
+  payeeguideId String       // guide profile ID
+  
+  // Payment details
+  amount          Float
+  currency        String        @default("USD")
+  status          PaymentStatus @default(PENDING)
+  paymentMethod   String        // "card", "paypal", "bank_transfer"
+  
+  // External payment processor details
+  stripePaymentId String?       // Stripe payment intent ID
+  stripeCustomerId String?      // Stripe customer ID
+  paypalOrderId   String?       // PayPal order ID
+  
+  // Transaction details
+  processingFee   Float?        // Platform fee
+  guideAmount Float?        // Amount guide receives after fees
+  platformAmount  Float?        // Platform commission
+  
+  // Timestamps
+  paidAt          DateTime?
+  failedAt        DateTime?
+  refundedAt      DateTime?
+  
+  // Failure/refund information
+  failureReason   String?
+  refundReason    String?
+  refundAmount    Float?
+  
+  // Relationships
+  evaluation      EvaluationDetails @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  payer           User              @relation("PayerPayments", fields: [payerId], references: [id])
+  payee           User              @relation("PayeePayments", fields: [payeeId], references: [id])
+  guide       Guide         @relation("guidePayments", fields: [payeeguideId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payments")
+}
+
+// =============================================================================
+// UTILITY MODELS - Location and supporting data
+// =============================================================================
+
+// Geographic location data for users and facilities
+model Location {
+  id         String     @id @default(uuid())
+  state      String
+  lat        Float?
+  lon        Float?
+  city       String?
+  country    String?
+  createdAt  DateTime   @default(now())
+
+  profiles   Profile[]
+  // facilities Facility[]
+  // guides guide[]
+  // statUpdateRequests StatUpdateRequest[] // ← added opposite relation
+
+  @@index([country, city,state])
 }

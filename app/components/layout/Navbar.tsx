@@ -13,7 +13,7 @@ import {
   BellIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
-  HomeIcon,
+  BriefcaseIcon,
   UserGroupIcon,
   TrophyIcon,
   ChevronDownIcon,
@@ -72,6 +72,14 @@ const Navbar: React.FC = () => {
       icon: UserGroupIcon,
       active: pathname === "/athletes" || pathname.startsWith("/athletes/"),
       onClick: () => toast("Athletes page coming soon! 🚀", { icon: "👥" }),
+    },
+    {
+      name: "Business",
+      href: "/business",
+      icon: BriefcaseIcon,
+      active: pathname === "/Business" || pathname.startsWith("/business/"),
+      onClick: () =>
+        toast("Sparta Business Accounts Opens! 🚀", { icon: "👥" }),
     },
   ];
 
