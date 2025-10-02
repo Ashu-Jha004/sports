@@ -265,7 +265,13 @@ function validateLocationConsistency(data: ModeratorRegistrationData): void {
 /**
  * Validate document formats and file extensions
  */
+/**
+ * Validate document formats and file extensions
+ */
 function validateDocumentFormats(data: ModeratorRegistrationData): void {
+  console.log("🔍 VALIDATION: Starting document format validation");
+  console.log("🔍 VALIDATION: Documents to validate:", data.documents);
+
   const validExtensions = [
     ".pdf",
     ".jpg",
@@ -277,14 +283,64 @@ function validateDocumentFormats(data: ModeratorRegistrationData): void {
   ];
   const invalidDocs: string[] = [];
 
-  data.documents.forEach((doc) => {
-    const ext = doc.toLowerCase().substring(doc.lastIndexOf("."));
-    if (!validExtensions.includes(ext)) {
+  data.documents.forEach((doc, index) => {
+    console.log(`🔍 VALIDATION: Checking document ${index}:`, doc);
+
+    // ✅ FIXED: Skip validation for Cloudinary moderator documents
+    if (
+      doc.includes("res.cloudinary.com") &&
+      doc.includes("moderator-documents")
+    ) {
+      console.log(
+        `✅ VALIDATION: Document ${index} is a Cloudinary moderator document - skipping format validation`
+      );
+      return; // Skip validation for trusted Cloudinary documents
+    }
+
+    // ✅ FIXED: Better extension extraction logic
+    let extension = "";
+
+    // Try to extract extension from the last part of the path (after last slash)
+    const pathParts = doc.split("/");
+    const filename = pathParts[pathParts.length - 1];
+    const lastDotIndex = filename.lastIndexOf(".");
+
+    if (lastDotIndex !== -1 && lastDotIndex < filename.length - 1) {
+      extension = filename.substring(lastDotIndex).toLowerCase();
+      console.log(
+        `🔍 VALIDATION: Extracted extension for document ${index}:`,
+        extension
+      );
+    } else {
+      console.log(
+        `🔍 VALIDATION: No extension found for document ${index}:`,
+        filename
+      );
+    }
+
+    // Check if extension is valid
+    if (extension && !validExtensions.includes(extension)) {
+      console.log(
+        `❌ VALIDATION: Invalid extension for document ${index}:`,
+        extension
+      );
       invalidDocs.push(doc);
+    } else if (!extension) {
+      console.log(
+        `❌ VALIDATION: No extension found for document ${index}:`,
+        doc
+      );
+      invalidDocs.push(doc);
+    } else {
+      console.log(
+        `✅ VALIDATION: Valid extension for document ${index}:`,
+        extension
+      );
     }
   });
 
   if (invalidDocs.length > 0) {
+    console.log("❌ VALIDATION: Found invalid documents:", invalidDocs);
     throw new ValidationError(
       "Invalid document formats detected. Only PDF, image, and document files are allowed.",
       "documents",
@@ -309,6 +365,8 @@ function validateDocumentFormats(data: ModeratorRegistrationData): void {
       { suspiciousDocuments: suspiciousDocs }
     );
   }
+
+  console.log("✅ VALIDATION: All documents passed format validation");
 }
 
 /**

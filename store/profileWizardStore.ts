@@ -87,7 +87,7 @@ const STORE_CONFIG = {
   /** Maximum number of errors to store */
   MAX_ERRORS: 10,
   /** Default step validation timeout (ms) */
-  VALIDATION_TIMEOUT: 5000,
+  VALIDATION_TIMEOUT: 30000,
   /** Image upload chunk size for progress tracking */
   UPLOAD_CHUNK_SIZE: 1024 * 1024, // 1MB
 } as const;
@@ -410,24 +410,33 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
       /**
        * Updates image upload state with validation
        */
+      /**
+       * Updates image upload state with validation
+       */
+      /**
+       * Updates image upload state with validation
+       */
       setImageUploadState: (state: Partial<ImageUploadState>) => {
         const currentState = get();
 
-        // Validate progress bounds
-        const validatedState = {
+        // ✅ FIXED: Build the new state directly
+        const newImageUploadState = {
+          ...currentState.imageUploadState,
           ...state,
-          progress:
-            state.progress !== undefined
-              ? Math.max(0, Math.min(100, state.progress))
-              : undefined,
+          // Override progress with validation if provided
+          ...(state.progress !== undefined && {
+            progress: Math.max(0, Math.min(100, state.progress)),
+          }),
         };
 
         // Skip update if no actual changes
-        const hasChanges = Object.keys(validatedState).some(
-          (key) =>
-            currentState.imageUploadState[key as keyof ImageUploadState] !==
-            validatedState[key as keyof ImageUploadState]
-        );
+        const hasChanges = Object.keys(state).some((key) => {
+          const stateKey = key as keyof ImageUploadState;
+          return (
+            currentState.imageUploadState[stateKey] !==
+            newImageUploadState[stateKey]
+          );
+        });
 
         if (!hasChanges) {
           return;
@@ -435,19 +444,20 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
 
         set(
           (prevState) => ({
-            imageUploadState: {
-              ...prevState.imageUploadState,
-              ...validatedState,
-            },
+            ...prevState,
+            imageUploadState: newImageUploadState,
           }),
           false,
           {
             type: "imageUpload/updateState",
-            payload: validatedState,
+            payload: state,
           }
         );
       },
 
+      /**
+       * Handles Cloudinary image upload with comprehensive error handling
+       */
       /**
        * Handles Cloudinary image upload with comprehensive error handling
        */
@@ -518,20 +528,26 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
             })
           );
 
-          // Perform upload with timeout
-          const uploadPromise = fetch("/api/upload-image", {
+          // ✅ IMPROVED: Upload with proper timeout and cancellation
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => {
+            controller.abort();
+          }, STORE_CONFIG.VALIDATION_TIMEOUT);
+
+          console.log(
+            `🔄 Starting upload with ${
+              STORE_CONFIG.VALIDATION_TIMEOUT / 1000
+            }s timeout...`
+          );
+
+          const response = await fetch("/api/upload-image", {
             method: "POST",
             body: formData,
+            signal: controller.signal,
           });
 
-          const timeoutPromise = new Promise<never>((_, reject) => {
-            setTimeout(
-              () => reject(new Error("Upload timeout")),
-              STORE_CONFIG.VALIDATION_TIMEOUT
-            );
-          });
-
-          const response = await Promise.race([uploadPromise, timeoutPromise]);
+          // Clear timeout on successful response
+          clearTimeout(timeoutId);
 
           if (!response.ok) {
             const errorData = await response
@@ -547,6 +563,11 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
           if (!result.success || !result.data) {
             throw new Error(result.error || "Upload failed - no data returned");
           }
+
+          console.log(
+            "✅ Upload completed successfully:",
+            result.data.public_id
+          );
 
           // Update success state
           setImageUploadState({
@@ -566,8 +587,16 @@ export const useProfileWizardStore = create<ProfileWizardStore>()(
         } catch (error) {
           console.error("Cloudinary upload error:", error);
 
-          const errorMessage =
-            error instanceof Error ? error.message : "Upload failed";
+          let errorMessage = "Upload failed";
+
+          if (error instanceof Error) {
+            if (error.name === "AbortError") {
+              errorMessage =
+                "Upload timed out after 30 seconds. Please try again with a smaller image.";
+            } else {
+              errorMessage = error.message;
+            }
+          }
 
           // Update error state
           setImageUploadState({
@@ -781,11 +810,9 @@ export const useFormData = () =>
 export const useCurrentStep = () =>
   useProfileWizardStore((state) => state.currentStep);
 
-export const useSteps = () =>
-  useProfileWizardStore((state) => state.steps);
+export const useSteps = () => useProfileWizardStore((state) => state.steps);
 
-export const useErrors = () =>
-  useProfileWizardStore((state) => state.errors);
+export const useErrors = () => useProfileWizardStore((state) => state.errors);
 
 export const useImageUploadState = () =>
   useProfileWizardStore((state) => state.imageUploadState);

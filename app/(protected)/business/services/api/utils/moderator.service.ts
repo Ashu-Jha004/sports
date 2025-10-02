@@ -332,6 +332,7 @@ export async function getModeratorProfile(
             guideEmail: true,
             PrimarySports: true,
             Sports: true,
+            status: true,
             Experience: true,
             state: true,
             city: true,
@@ -372,7 +373,7 @@ function formatProfileResponse(user: any): ModeratorProfileDetails {
     id: user.Guide.id,
     userId: user.id,
     guideEmail: user.Guide.guideEmail || "",
-    status: "pending_review" as const,
+    status: user.Guide.status || "pending_review",
     submittedAt: user.Guide.createdAt.toISOString(),
   };
 

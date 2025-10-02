@@ -1,6 +1,6 @@
 export interface ModeratorFormData {
   guideEmail: string;
-  documents: File[];
+  documents: string[];
   primarySports: string | undefined;
   sports: string[];
   experience: number | null;

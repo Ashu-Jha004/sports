@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -18,7 +18,7 @@ import { WelcomeStep } from "./components/WelcomeStep";
 import { ContactStep } from "./components/ContactStep";
 import { SportsExperienceStep } from "./components/SportsExperinenceStep";
 import { LocationStep } from "./components/LocationStep";
-import { DocumentsStep } from "./components/DocumentStep";
+import DocumentsStep from "./components/DocumentStep";
 import { ReviewStep } from "./components/ReviewStep";
 import { redirect } from "next/navigation";
 
@@ -173,27 +173,30 @@ const ModeratorOnboardingPage: React.FC = () => {
     }
   };
 
-  const updateFormData = (data: Partial<ModeratorFormData>) => {
-    try {
-      setFormData((prev) => ({ ...prev, ...data }));
+  const updateFormData = useCallback(
+    (data: Partial<ModeratorFormData>) => {
+      try {
+        setFormData((prev) => ({ ...prev, ...data }));
 
-      // Clear related errors when field is updated
-      const newErrors = { ...errors };
-      Object.keys(data).forEach((key) => {
-        delete newErrors[key];
-      });
-      setErrors(newErrors);
-    } catch (error) {
-      console.error("Error updating form data:", error);
-      setSubmissionState((prev) => ({
-        ...prev,
-        error: {
-          type: "unknown",
-          message: "Failed to update form data. Please try again.",
-        },
-      }));
-    }
-  };
+        // Clear related errors when field is updated
+        const newErrors = { ...errors };
+        Object.keys(data).forEach((key) => {
+          delete newErrors[key];
+        });
+        setErrors(newErrors);
+      } catch (error) {
+        console.error("Error updating form data:", error);
+        setSubmissionState((prev) => ({
+          ...prev,
+          error: {
+            type: "unknown",
+            message: "Failed to update form data. Please try again.",
+          },
+        }));
+      }
+    },
+    [errors]
+  );
 
   const validateStep = (step: number): boolean => {
     try {
@@ -284,6 +287,7 @@ const ModeratorOnboardingPage: React.FC = () => {
 
   // UPDATED: Submit application using our new API
   // UPDATED: Enhanced debugging in your submitApplication function
+  // UPDATED: Submit application using our new API
   const submitApplication = async (
     formData: ModeratorFormData
   ): Promise<void> => {
@@ -297,47 +301,17 @@ const ModeratorOnboardingPage: React.FC = () => {
       console.log("Documents array:", formData.documents);
       console.log("Documents length:", formData.documents?.length);
 
-      // Log each document individually
+      // ✅ FIXED: Documents are already strings (URLs), no transformation needed
       formData.documents?.forEach((doc, index) => {
         console.log(`Document ${index}:`, doc);
         console.log(`Document ${index} type:`, typeof doc);
-        console.log(`Document ${index} constructor:`, doc?.constructor?.name);
-        if (doc && typeof doc === "object") {
-          console.log(`Document ${index} keys:`, Object.keys(doc));
-          console.log(`Document ${index} values:`, Object.values(doc));
-        }
+        // Documents are now always strings (Cloudinary URLs)
       });
 
-      // Transform documents to ensure they're strings
+      // ✅ SIMPLIFIED: No transformation needed since documents are already URLs
       const transformedData = {
         ...formData,
-        documents:
-          formData.documents?.map((doc, index) => {
-            console.log(`Transforming document ${index}:`, doc);
-
-            // Handle different document formats
-            let result: string;
-
-            if (typeof doc === "string") {
-              result = doc;
-            } else if (doc instanceof File) {
-              result = doc.name;
-            } else if (doc && typeof doc === "object") {
-              // Try different properties that might contain the file name/path
-              result =
-                (doc as any).name ||
-                (doc as any).fileName ||
-                (doc as any).path ||
-                (doc as any).url ||
-                (doc as any).originalName ||
-                String(doc);
-            } else {
-              result = String(doc);
-            }
-
-            console.log(`Document ${index} transformed to:`, result);
-            return result;
-          }) || [],
+        documents: formData.documents || [], // Already strings
       };
 
       console.log("=== TRANSFORMED DATA ===");

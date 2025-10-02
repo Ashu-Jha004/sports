@@ -331,6 +331,12 @@ model Guide{
   lon        Float?
   city       String?
   country    String?
+
+  status       String     @default("pending_review") // "pending_review", "approved", "rejected"
+  reviewNote   String?    // Admin notes when approving/rejecting
+  reviewedBy   String?    // Admin user ID who reviewed
+  reviewedAt   DateTime?  // When the review was completed
+  
   // Evaluation requests received by this guide
   evaluationRequests PhysicalEvaluationRequest[]
   
