@@ -72,6 +72,8 @@ export default function ProfilePage({
             "/api/users/search?q=" + encodeURIComponent(user.firstName || ""),
             {
               method: "GET",
+              cache: "force-cache",
+              next: { revalidate: 4600 },
             }
           );
 

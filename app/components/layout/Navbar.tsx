@@ -1,3 +1,4 @@
+// Navbar.tsx (ENHANCED WITH ANIMATED BELL INDICATOR)
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -6,8 +7,8 @@ import { usePathname } from "next/navigation";
 import { useUser, SignOutButton } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import GlobalSearch from "@/app/(protected)/profile/[[...params]]/components/common/GlobalSearch";
-import NotificationDropdown from "../notifications/NotificationDropdown"; // NEW: Add this import
-import { useNotifications } from "@/hooks/useNotifications"; // NEW: Add this import
+import NotificationDropdown from "../notifications/NotificationDropdown";
+import { useNotifications } from "@/hooks/useNotifications"; // ENHANCED: Import updated hook
 import {
   UserCircleIcon,
   BellIcon,
@@ -25,7 +26,10 @@ import { BellIcon as BellIconSolid } from "@heroicons/react/24/solid";
 const Navbar: React.FC = () => {
   const { user, isLoaded } = useUser();
   const pathname = usePathname();
-  const { unreadCount } = useNotifications(); // NEW: Get unread count
+
+  // ENHANCED: Get both unread count AND new notification indicator
+  const { unreadCount, hasNewNotifications, clearNewNotificationIndicators } =
+    useNotifications();
 
   // State management
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -57,6 +61,20 @@ const Navbar: React.FC = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // NEW: Handle notification dropdown opening
+  const handleNotificationDropdownToggle = () => {
+    const wasOpen = isNotificationDropdownOpen;
+    setIsNotificationDropdownOpen(!wasOpen);
+
+    // If opening dropdown, clear the new notification indicators
+    if (!wasOpen && hasNewNotifications) {
+      // Small delay to allow dropdown to open first
+      setTimeout(() => {
+        clearNewNotificationIndicators();
+      }, 100);
+    }
+  };
 
   // Navigation items
   const navigationItems = [
@@ -102,7 +120,7 @@ const Navbar: React.FC = () => {
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Left side - Logo & Navigation (Keep existing) */}
+          {/* Left side - Logo & Navigation */}
           <div className="flex items-center space-x-8">
             <Link
               href="/dashboard"
@@ -147,40 +165,65 @@ const Navbar: React.FC = () => {
               <GlobalSearch placeholder="Search athletes..." />
             </div>
 
-            {/* NEW: Simplified Notification Button + Dropdown */}
+            {/* ENHANCED: Notification Button with Animated Indicator */}
             <div className="relative" ref={notificationDropdownRef}>
               <button
-                onClick={() =>
-                  setIsNotificationDropdownOpen(!isNotificationDropdownOpen)
-                }
-                className={`relative p-2 rounded-lg transition-colors ${
-                  unreadCount > 0
+                onClick={handleNotificationDropdownToggle}
+                className={`relative p-2 rounded-lg transition-all duration-200 ${
+                  hasNewNotifications
+                    ? "text-blue-600 bg-blue-50 hover:bg-blue-100 shadow-sm"
+                    : unreadCount > 0
                     ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
                     : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                 }`}
+                title={
+                  hasNewNotifications
+                    ? "You have new notifications!"
+                    : unreadCount > 0
+                    ? `${unreadCount} unread notifications`
+                    : "Notifications"
+                }
               >
+                {/* Bell Icon - Changes based on state */}
                 {unreadCount > 0 ? (
-                  <BellIconSolid className="w-6 h-6" />
+                  <BellIconSolid
+                    className={`w-6 h-6 transition-transform duration-200 ${
+                      hasNewNotifications ? "animate-pulse" : ""
+                    }`}
+                  />
                 ) : (
                   <BellIcon className="w-6 h-6" />
                 )}
 
-                {/* Notification Badge */}
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {/* NEW: Animated Red Indicator Dot for New Notifications */}
+                {hasNewNotifications && (
+                  <div className="absolute -top-1 -right-1">
+                    {/* Pulsing Ring Effect */}
+                    <div className="absolute inset-0 w-4 h-4 bg-red-400 rounded-full animate-ping opacity-75"></div>
+                    {/* Solid Red Dot */}
+                    <div className="relative w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-sm">
+                      {/* Inner Glow Effect */}
+                      <div className="absolute inset-0.5 bg-red-300 rounded-full opacity-60 animate-pulse"></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Unread Count Badge (Only show if no new indicator) */}
+                {unreadCount > 0 && !hasNewNotifications && (
+                  <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white shadow-sm">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
               </button>
 
-              {/* NEW: Use our NotificationDropdown component */}
+              {/* Notification Dropdown */}
               <NotificationDropdown
                 isOpen={isNotificationDropdownOpen}
                 onClose={() => setIsNotificationDropdownOpen(false)}
               />
             </div>
 
-            {/* Profile Dropdown (Keep existing) */}
+            {/* Profile Dropdown */}
             <div className="relative" ref={profileDropdownRef}>
               <button
                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
@@ -198,7 +241,7 @@ const Navbar: React.FC = () => {
                 <ChevronDownIcon className="w-4 h-4 text-gray-600" />
               </button>
 
-              {/* Profile Dropdown Menu (Keep existing) */}
+              {/* Profile Dropdown Menu */}
               {isProfileDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
                   <div className="px-4 py-2 border-b border-gray-200">
@@ -249,7 +292,7 @@ const Navbar: React.FC = () => {
               )}
             </div>
 
-            {/* Mobile Menu Button (Keep existing) */}
+            {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
@@ -263,7 +306,7 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Menu (Keep existing) */}
+        {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 pb-4">
             <div className="px-4 py-3 border-b border-gray-200">
@@ -295,6 +338,39 @@ const Navbar: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* NEW: CSS Animations for the indicator */}
+      <style jsx>{`
+        @keyframes pulse-soft {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.7;
+          }
+        }
+
+        @keyframes ping-custom {
+          0% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          75%,
+          100% {
+            transform: scale(2);
+            opacity: 0;
+          }
+        }
+
+        .animate-pulse-soft {
+          animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .animate-ping-custom {
+          animation: ping-custom 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+      `}</style>
     </header>
   );
 };
