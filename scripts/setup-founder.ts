@@ -11,8 +11,8 @@ async function setupFounder() {
     console.log("🚀 Setting up founder admin access...");
 
     // Your actual values (already correct!)
-    const FOUNDER_CLERK_ID = "user_33FY8YiJ3UraX3YsZaRzc69JZuZ";
-    const FOUNDER_EMAIL = "ashujha009322@gmail.com";
+    const FOUNDER_CLERK_ID: any = process.env.FOUNDER_CLERK_ID;
+    const FOUNDER_EMAIL: any = process.env.FOUNDER_EMAIL;
 
     // CORRECTED validation - check against placeholder values
     if (FOUNDER_CLERK_ID === FOUNDER_CLERK_ID) {
