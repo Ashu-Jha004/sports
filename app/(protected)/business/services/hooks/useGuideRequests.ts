@@ -1,4 +1,4 @@
-// hooks/useGuideRequests.ts (CREATE THIS FILE)
+// hooks/useGuideRequests.ts (UPDATED WITH ENHANCED DATA STRUCTURE)
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
@@ -19,6 +19,12 @@ interface GuideRequest {
   createdAt: string;
   respondedAt?: string | null;
   guideResponse?: string | null;
+  // Enhanced scheduling fields
+  location?: string | null;
+  scheduledDate?: string | null;
+  scheduledTime?: string | null;
+  equipment?: string[] | null;
+  OTP?: number | null;
   user: RequestUser;
 }
 
@@ -27,6 +33,19 @@ interface RequestStats {
   pending: number;
   accepted: number;
   rejected: number;
+}
+
+// Enhanced data types for actions
+interface AcceptRequestData {
+  message: string;
+  location: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  equipment: string;
+}
+
+interface RejectRequestData {
+  message?: string;
 }
 
 export const useGuideRequests = () => {
@@ -72,17 +91,17 @@ export const useGuideRequests = () => {
   const handleRequest = async (
     requestId: string,
     action: "ACCEPT" | "REJECT",
-    response?: string
+    requestData: AcceptRequestData | RejectRequestData
   ) => {
     try {
       setActionLoading(requestId);
 
-      console.log(`🔄 ${action}ing request:`, { requestId, response });
+      console.log(`🔄 ${action}ing request:`, { requestId, requestData });
 
       const res = await fetch(`/api/guides/requests/${requestId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, response }),
+        body: JSON.stringify({ action, ...requestData }),
       });
 
       if (!res.ok) {
@@ -93,16 +112,25 @@ export const useGuideRequests = () => {
       const result = await res.json();
       console.log("✅ Request updated:", result);
 
+      // Show success message with OTP if available
+      if (action === "ACCEPT" && result.otp) {
+        toast.success(
+          `Evaluation scheduled successfully! Verification OTP: ${result.otp}`,
+          { duration: 8000 }
+        );
+      } else {
+        toast.success(`Request ${action.toLowerCase()}ed successfully!`);
+      }
+
       // Refresh requests after successful action
       await fetchRequests();
 
-      toast.success(`Request ${action.toLowerCase()}ed successfully!`);
-      return true;
+      return { success: true, otp: result.otp };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Action failed";
       toast.error(errorMessage);
       console.error("Error handling request:", err);
-      return false;
+      return { success: false };
     } finally {
       setActionLoading(null);
     }
@@ -119,9 +147,9 @@ export const useGuideRequests = () => {
     actionLoading,
     error,
     refetch: fetchRequests,
-    acceptRequest: (id: string, response?: string) =>
-      handleRequest(id, "ACCEPT", response),
-    rejectRequest: (id: string, response?: string) =>
-      handleRequest(id, "REJECT", response),
+    acceptRequest: (id: string, data: AcceptRequestData) =>
+      handleRequest(id, "ACCEPT", data),
+    rejectRequest: (id: string, data: RejectRequestData) =>
+      handleRequest(id, "REJECT", data),
   };
 };

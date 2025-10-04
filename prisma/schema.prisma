@@ -341,7 +341,7 @@ model Guide{
   evaluationRequests PhysicalEvaluationRequest[]
   
   // Evaluation details sent by this guide
-  evaluationDetails EvaluationDetails[]
+
   
   // Stats access requests sent by this guide
   statsAccessRequests StatsAccessRequest[]
@@ -364,51 +364,19 @@ model PhysicalEvaluationRequest {
   guideId String
   status      RequestStatus @default(PENDING)
   message     String?       // Optional message from user
-  
+  MessageFromModerator String?
+  OTP Int? @unique 
+  location        String?
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   guide Guide @relation(fields: [guideId], references: [id], onDelete: Cascade)
-  
-  // Related evaluation details (if accepted)
-  evaluationDetails EvaluationDetails?
+  scheduledDate   DateTime?
+  scheduledTime   String?
+  equipment       String[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   @@map("physical_evaluation_requests")
-}
-
-// Evaluation details sent by guide after accepting request
-model EvaluationDetails {
-  id                    String            @id @default(cuid())
-  evaluationRequestId   String            @unique
-  guideId          String
-  status               EvaluationStatus  @default(SCHEDULED)
-  
-  // Evaluation details
-  location        String
-  scheduledDate   DateTime
-  scheduledTime   String
-  equipment       String[]  // Array of required equipment
-  price          Float
-  verificationId String    @unique // For verification at meeting
-  notes          String?
-    // ADD THESE PAYMENT-RELATED FIELDS:
-  requiresPayment      Boolean           @default(true)
-  paymentDueDate       DateTime?         // When payment must be completed
-  paymentStatus        PaymentStatus     @default(PENDING)
-  paymentCompletedAt   DateTime?
-    // ADD PAYMENT RELATIONSHIP:
-  payment            Payment?                  // One-to-one with Payment
-  evaluationRequest PhysicalEvaluationRequest @relation(fields: [evaluationRequestId], references: [id], onDelete: Cascade)
-  guide        Guide                  @relation(fields: [guideId], references: [id], onDelete: Cascade)
-  
-  // Related stats access request (after verification)
-  statsAccessRequest StatsAccessRequest?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@map("evaluation_details")
 }
 
 // Stats access request from guide to user (after verification)
@@ -420,7 +388,6 @@ model StatsAccessRequest {
   status             AccessStatus @default(REQUESTED)
   message            String?
   
-  evaluationDetails EvaluationDetails @relation(fields: [evaluationDetailsId], references: [id], onDelete: Cascade)
   guide        Guide         @relation(fields: [guideId], references: [id], onDelete: Cascade)
   
   // Related permission (if granted)
@@ -565,7 +532,6 @@ model Payment {
   refundAmount    Float?
   
   // Relationships
-  evaluation      EvaluationDetails @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   payer           User              @relation("PayerPayments", fields: [payerId], references: [id])
   payee           User              @relation("PayeePayments", fields: [payeeId], references: [id])
   guide       Guide         @relation("guidePayments", fields: [payeeguideId], references: [id])

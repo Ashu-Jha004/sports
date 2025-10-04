@@ -28,81 +28,13 @@ import {
   Image as ImageIcon,
   Paperclip,
 } from "lucide-react";
-
-// =============================================================================
-// TYPES & INTERFACES (Keep your existing types)
-// =============================================================================
-
-interface AdminUserProps {
-  id: string;
-  name: string;
-  email: string;
-  role: string | null;
-  permissions: {
-    canApproveModerators: boolean;
-    canManageAdmins: boolean;
-    canViewAuditLogs: boolean;
-  };
-}
-
-interface ModeratorApplication {
-  id: string;
-  userId: string;
-  user: {
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
-  };
-  guideEmail: string | null;
-  PrimarySports: string | null;
-  Sports: string[];
-  Experience: number | null;
-  documents: string[];
-  city: string | null;
-  state: string | null;
-  country: string | null;
-  status: "pending_review" | "approved" | "rejected";
-  reviewNote: string | null;
-  reviewedBy: string | null;
-  reviewedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface ApplicationStats {
-  total: number;
-  pending_review: number;
-  approved: number;
-  rejected: number;
-}
-
-interface AdminDashboardData {
-  applications: ModeratorApplication[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-  stats: ApplicationStats;
-  adminInfo: {
-    name: string;
-    role: string | null;
-    permissions: {
-      canApproveModerators: boolean;
-      canManageUsers: boolean;
-      canManageAdmins: boolean;
-      canViewAuditLogs: boolean;
-    };
-  };
-}
-
-interface AdminModeratorsPanelProps {
-  adminUser: AdminUserProps;
-}
-
+import {
+  AdminModeratorsPanelProps,
+  AdminDashboardData,
+  ModeratorApplication,
+} from "../types/AdminModeratorsPanel";
+import { ApplicationDetailModalProps } from "../types/AdminModeratorsPanel";
+import { useRef, useCallback } from "react";
 // ✅ NEW: Document utilities
 const getDocumentInfo = (url: string) => {
   const filename = url.split("/").pop()?.split("?")[0] || "document";
@@ -160,53 +92,99 @@ export default function AdminModeratorsPanel({
     string | null
   >(null);
 
-  // Fetch applications data
-  useEffect(() => {
-    fetchApplications();
-  }, [statusFilter, searchQuery, currentPage]);
+  const isMounted = useRef(true);
+  const lastFetchParams = useRef<string>("");
+  const abortController = useRef<AbortController | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchApplications = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: "10",
+  const fetchApplications = useCallback(
+    async (isRefresh = false) => {
+      // Create current params string for comparison
+      const currentParams = JSON.stringify({
+        page: currentPage,
+        statusFilter,
+        searchQuery: searchQuery.trim(),
       });
 
-      if (statusFilter !== "all") {
-        params.append("status", statusFilter);
+      // Skip fetch if params haven't changed (except for manual refresh)
+      if (!isRefresh && lastFetchParams.current === currentParams && data) {
+        return;
       }
 
-      if (searchQuery.trim()) {
-        params.append("search", searchQuery.trim());
+      // Cancel previous request if still pending
+      if (abortController.current) {
+        abortController.current.abort();
       }
+      abortController.current = new AbortController();
 
-      const response = await fetch(
-        `/api/admin/moderators?${params.toString()}`
-      );
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
+        setError(null);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.error?.message ||
-            `Failed to fetch applications: ${response.status}`
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: "10",
+        });
+
+        if (statusFilter !== "all") {
+          params.append("status", statusFilter);
+        }
+
+        if (searchQuery.trim()) {
+          params.append("search", searchQuery.trim());
+        }
+
+        const response = await fetch(
+          `/api/admin/moderators?${params.toString()}`,
+          {
+            signal: abortController.current.signal,
+          }
         );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error?.message ||
+              `Failed to fetch applications: ${response.status}`
+          );
+        }
+
+        const result = await response.json();
+
+        // Only update state if component is still mounted
+        if (isMounted.current) {
+          setData(result.data);
+          lastFetchParams.current = currentParams;
+        }
+      } catch (err) {
+        // Ignore abort errors
+        if (err instanceof Error && err.name === "AbortError") {
+          return;
+        }
+
+        if (isMounted.current) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load applications"
+          );
+          console.error("Admin fetch error:", err);
+        }
+      } finally {
+        if (isMounted.current) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
-
-      const result = await response.json();
-      setData(result.data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load applications"
-      );
-      console.error("Admin fetch error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+    },
+    [statusFilter, searchQuery, currentPage]
+  );
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]); // Empty dependency array - runs once on mount
+  // ✅ REPLACE handleBulkStatusUpdate with optimistic updates
   const handleBulkStatusUpdate = async (newStatus: "approved" | "rejected") => {
     if (selectedApplications.length === 0) {
       alert("Please select applications to update");
@@ -217,8 +195,37 @@ export default function AdminModeratorsPanel({
       `Add a review note for ${newStatus} applications (optional):`
     );
 
+    // Store original data for rollback
+    const originalData = data;
+
     try {
       setBulkUpdating(true);
+
+      // Optimistic update - immediately update UI
+      if (data) {
+        const updatedApplications = data.applications.map((app) =>
+          selectedApplications.includes(app.id)
+            ? {
+                ...app,
+                status: newStatus as any,
+                reviewNote: reviewNote || null,
+              }
+            : app
+        );
+
+        setData({
+          ...data,
+          applications: updatedApplications,
+          stats: {
+            ...data.stats,
+            [newStatus]: data.stats[newStatus] + selectedApplications.length,
+            pending_review: Math.max(
+              0,
+              data.stats.pending_review - selectedApplications.length
+            ),
+          },
+        });
+      }
 
       const response = await fetch("/api/admin/moderators", {
         method: "PATCH",
@@ -233,6 +240,11 @@ export default function AdminModeratorsPanel({
       });
 
       if (!response.ok) {
+        // Rollback on failure
+        if (originalData) {
+          setData(originalData);
+        }
+
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           errorData.error?.message ||
@@ -240,13 +252,16 @@ export default function AdminModeratorsPanel({
         );
       }
 
-      // Refresh data and clear selection
-      await fetchApplications();
       setSelectedApplications([]);
       alert(
         `Successfully updated ${selectedApplications.length} application(s) to ${newStatus}`
       );
     } catch (err) {
+      // Rollback to original state on error
+      if (originalData) {
+        setData(originalData);
+      }
+
       alert(
         err instanceof Error ? err.message : "Failed to update applications"
       );
@@ -255,6 +270,10 @@ export default function AdminModeratorsPanel({
       setBulkUpdating(false);
     }
   };
+  const handleRefresh = useCallback(() => {
+    lastFetchParams.current = ""; // Reset cache
+    fetchApplications(true);
+  }, [fetchApplications]);
 
   const handleSelectAll = () => {
     if (!data) return;
@@ -321,10 +340,14 @@ export default function AdminModeratorsPanel({
           </h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={fetchApplications}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50 transition-colors"
+            title="Refresh data"
           >
-            Try Again
+            <RefreshCw
+              className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
+            />
           </button>
         </div>
       </div>
@@ -349,13 +372,13 @@ export default function AdminModeratorsPanel({
             </div>
             <div className="flex items-center space-x-4">
               <button
-                title="button1"
-                onClick={fetchApplications}
-                disabled={loading}
-                className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50 transition-colors"
+                title="Refresh data"
               >
                 <RefreshCw
-                  className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
+                  className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
                 />
               </button>
               <button className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
@@ -712,13 +735,6 @@ export default function AdminModeratorsPanel({
 // =============================================================================
 // ✅ ENHANCED APPLICATION DETAIL MODAL WITH DOCUMENT VIEWER
 // =============================================================================
-
-interface ApplicationDetailModalProps {
-  applicationId: string;
-  applications: ModeratorApplication[];
-  onClose: () => void;
-  onStatusUpdate: () => void;
-}
 
 const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   applicationId,

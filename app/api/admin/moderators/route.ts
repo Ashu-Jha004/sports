@@ -182,7 +182,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       ];
     }
 
-    // Fetch applications with user data
+    // Fetch applications with user data (READ-ONLY)
     const [applications, totalCount] = await Promise.all([
       prisma.guide.findMany({
         where: whereClause,
@@ -205,7 +205,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       prisma.guide.count({ where: whereClause }),
     ]);
 
-    // Get status counts for dashboard stats
+    // Get status counts for dashboard stats (READ-ONLY)
     const statusCounts = await prisma.guide.groupBy({
       by: ["status"],
       _count: true,
@@ -260,16 +260,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       },
     };
 
-    // Log admin access
-    await logAdminAction(
-      adminUser.id,
-      "VIEW_MODERATOR_APPLICATIONS",
-      {
-        filters: { status, search, page, limit },
-        resultCount: totalCount,
-      },
-      request
-    );
+    // ✅ REMOVED: No more write operations in GET request!
+    // Only log significant actions, not routine data fetching
+
+    // ✅ OPTIONAL: Only log for debugging (remove in production)
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `Admin ${adminUser.email} viewed applications - Page ${page}, Status: ${
+          status || "all"
+        }`
+      );
+    }
 
     return createSuccessResponse(
       result,

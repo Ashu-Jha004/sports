@@ -35,6 +35,7 @@ import {
   MailIcon,
   Mails,
 } from "lucide-react";
+
 // =============================================================================
 // TYPES & INTERFACES
 // =============================================================================
@@ -653,109 +654,6 @@ const ModeratorDashboard: React.FC = () => {
                       {details?.experience ? `${details.experience}y` : "N/A"}
                     </span>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <Settings className="w-5 h-5 mr-2 text-indigo-600" />
-                  Quick Actions
-                </h2>
-                <div className="space-y-2">
-                  <button className="w-full flex items-center justify-start p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-indigo-200 transition-all group">
-                    <Eye className="w-4 h-4 text-gray-500 group-hover:text-indigo-600 mr-3" />
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-700">
-                      View Applications
-                    </span>
-                  </button>
-
-                  <button className="w-full flex items-center justify-start p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-indigo-200 transition-all group">
-                    <Users className="w-4 h-4 text-gray-500 group-hover:text-indigo-600 mr-3" />
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-700">
-                      Manage Athletes
-                    </span>
-                  </button>
-
-                  <button className="w-full flex items-center justify-start p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-indigo-200 transition-all group">
-                    <Download className="w-4 h-4 text-gray-500 group-hover:text-indigo-600 mr-3" />
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-700">
-                      Download Reports
-                    </span>
-                  </button>
-
-                  <button className="w-full flex items-center justify-start p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-indigo-200 transition-all group">
-                    <Settings className="w-4 h-4 text-gray-500 group-hover:text-indigo-600 mr-3" />
-                    <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-700">
-                      Account Settings
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Activity Timeline */}
-            <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <Clock className="w-5 h-5 mr-2 text-indigo-600" />
-                  Recent Activity
-                </h2>
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 mr-3"></div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        Application Submitted
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {profile &&
-                          new Date(profile.submittedAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <div
-                      className={`w-2 h-2 rounded-full mt-2 mr-3 ${
-                        profile?.status === "approved"
-                          ? "bg-green-500"
-                          : profile?.status === "rejected"
-                          ? "bg-red-500"
-                          : "bg-yellow-500"
-                      }`}
-                    ></div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        Status:{" "}
-                        {profile?.status?.replace("_", " ").toUpperCase()}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {profile?.status === "approved" &&
-                          "Congratulations on becoming a moderator!"}
-                        {profile?.status === "rejected" &&
-                          "Application was not approved"}
-                        {profile?.status === "pending_review" &&
-                          "Under review by admin team"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {details?.reviewedAt && (
-                    <div className="flex items-start">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3"></div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          Review Completed
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(details.reviewedAt).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
