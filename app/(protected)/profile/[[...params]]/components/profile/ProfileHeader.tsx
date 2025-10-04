@@ -15,44 +15,7 @@ import {
   HeartIcon,
 } from "@heroicons/react/24/outline";
 import { CheckBadgeIcon } from "@heroicons/react/24/solid";
-
-interface ProfileData {
-  id: string;
-  username: string;
-  firstName: string | null;
-  lastName: string | null;
-  profileImageUrl: string | null;
-  bio: string | null;
-  avatarUrl: string | null;
-  primarySport: string | null;
-  rank: string | null;
-  class: string | null;
-  role: string;
-  city: string | null;
-  state: string | null;
-  country: string | null;
-  location: {
-    lat: number | 0;
-    lon: number | 0;
-    city: string | "";
-    state: string | "";
-    country: string | "";
-  };
-  dateOfBirth: string | null;
-  gender: string | null;
-  email: string | null;
-  createdAt: string;
-  updatedAt: string;
-  isOwnProfile: boolean;
-
-  // NEW: Social data
-  followersCount: number;
-  followingCount: number;
-  postsCount: number;
-  friendshipStatus: "none" | "following" | "follower" | "mutual" | "self";
-  isFollowing: boolean;
-  isFollowedBy: boolean;
-}
+import { ProfileData } from "../../types/profileDtata";
 
 interface ProfileHeaderProps {
   profileData: ProfileData;

@@ -4,35 +4,7 @@ import React, { useEffect, useCallback } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import ProfileWizard from "../../../../../(protected)/onboarding/components/profile-wizard/ProfileWizard";
 import { useProfileWizardStore } from "@/store/profileWizardStore";
-
-interface ProfileData {
-  id: string;
-  username: string;
-  firstName: string | null;
-  lastName: string | null;
-  bio: string | null;
-  avatarUrl: string | null;
-  primarySport: string | null;
-  rank: string | null;
-  class: string | null;
-  role: string;
-  city: string | null;
-  state: string | null;
-  country: string | null;
-  location: {
-    lat: number |0;
-    lon: number | 0;
-    city: string | null;
-    state: string | null;
-    country: string | null;
-  } | null;
-  dateOfBirth: string | null;
-  gender: string | null;
-  email: string | null;
-  createdAt: string;
-  updatedAt: string;
-  isOwnProfile: boolean;
-}
+import { ProfileData } from "../../types/profileDtata";
 
 interface EditProfileModalProps {
   isOpen: boolean;

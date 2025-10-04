@@ -1,6 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useGuideRequests } from "../hooks/useGuideRequests";
+import { InboxButton } from "./components/guide/InboxButton";
+import { InboxDialog } from "./components/guide/InboxDialog";
+
 import {
   User,
   MapPin,
@@ -24,8 +28,13 @@ import {
   Shield,
   Star,
   Activity,
+  MessageSquare,
+  UserCheck,
+  UserX,
+  Send,
+  MailIcon,
+  Mails,
 } from "lucide-react";
-
 // =============================================================================
 // TYPES & INTERFACES
 // =============================================================================
@@ -78,6 +87,8 @@ const ModeratorDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  // ADD INBOX STATE
+  const [isInboxOpen, setIsInboxOpen] = useState(false);
 
   // Fetch moderator profile data
   useEffect(() => {
@@ -275,12 +286,12 @@ const ModeratorDashboard: React.FC = () => {
                   className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
                 />
               </button>
-              <button
-                title="Notifications"
-                className="p-2 text-gray-500 hover:text-gray-700 rounded-md hover:bg-gray-100"
-              >
-                <Bell className="w-5 h-5" />
-              </button>
+
+              {/* ADD INBOX BUTTON - Only for approved guides */}
+              {profile?.status === "approved" && (
+                <Mails onClick={() => setIsInboxOpen(true)} />
+              )}
+
               <button
                 title="Settings"
                 className="p-2 text-gray-500 hover:text-gray-700 rounded-md hover:bg-gray-100"
@@ -291,6 +302,7 @@ const ModeratorDashboard: React.FC = () => {
           </div>
         </div>
       </header>
+      <InboxDialog isOpen={isInboxOpen} onClose={() => setIsInboxOpen(false)} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Enhanced Status Alert */}

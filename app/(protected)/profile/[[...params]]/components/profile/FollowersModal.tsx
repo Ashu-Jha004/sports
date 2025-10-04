@@ -14,31 +14,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
-
-interface UserItem {
-  id: string;
-  username: string;
-  firstName: string | null;
-  lastName: string | null;
-  displayName: string;
-  profileImageUrl: string | null;
-  bio: string | null;
-  primarySport: string | null;
-  rank: string | null;
-  class: string | null;
-  role: string;
-  city: string | null;
-  country: string | null;
-  location: string | null;
-  followedAt: string;
-  followersCount: number;
-  followingCount: number;
-  isCurrentUser: boolean;
-  isFollowingCurrentUser?: boolean;
-  isFollowedByCurrentUser?: boolean;
-  showPrivateInfo: boolean;
-}
-
+import { UserItem } from "../../types/profileDtata";
+import { getRankEmoji } from "../../types/profileDtata";
+import { getClassColor } from "../../types/profileDtata";
 interface PaginationInfo {
   currentPage: number;
   totalPages: number;
@@ -200,43 +178,7 @@ const FollowersModal: React.FC<FollowersModalProps> = ({
     []
   );
 
-  // Get rank emoji
-  const getRankEmoji = (rank: string | null) => {
-    switch (rank) {
-      case "KING":
-        return "👑";
-      case "QUEEN":
-        return "👸";
-      case "ROOK":
-        return "🏰";
-      case "BISHOP":
-        return "⛪";
-      case "KNIGHT":
-        return "🐎";
-      case "PAWN":
-        return "♟️";
-      default:
-        return "🏆";
-    }
-  };
-
   // Get class color
-  const getClassColor = (classLevel: string | null) => {
-    switch (classLevel) {
-      case "A":
-        return "text-red-600 bg-red-50";
-      case "B":
-        return "text-orange-600 bg-orange-50";
-      case "C":
-        return "text-yellow-600 bg-yellow-50";
-      case "D":
-        return "text-blue-600 bg-blue-50";
-      case "E":
-        return "text-gray-600 bg-gray-50";
-      default:
-        return "text-gray-600 bg-gray-50";
-    }
-  };
 
   // Close modal effect
   useEffect(() => {

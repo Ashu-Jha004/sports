@@ -5,60 +5,31 @@ import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import ProfileHeader from "./components/profile/ProfileHeader";
 import ProfileTabs from "./components/profile/ProfileTabs";
-import GlobalSearch from "./components/common/GlobalSearch";
 import EditProfileModal from "../../profile/[[...params]]/components/profile/EditProfileModal";
-import {
-  ExclamationTriangleIcon,
-  ArrowLeftIcon,
-} from "@heroicons/react/24/outline";
 import FollowersModal from "./components/profile/FollowersModal";
-interface ProfileData {
-  id: string;
-  username: string;
-  firstName: string | null;
-  lastName: string | null;
-  bio: string | null;
-  avatarUrl: string | null;
-  primarySport: string | null;
-  rank: string | null;
-  class: string | null;
-  role: string;
-  city: string | null;
-  state: string | null;
-  country: string | null;
-  location: {
-    lat: number | 0;
-    lon: number | 0;
-    city: string | null;
-    state: string | null;
-    country: string | null;
-  } | null;
-  dateOfBirth: string | null;
-  gender: string | null;
-  email: string | null;
-  createdAt: string;
-  updatedAt: string;
-  isOwnProfile: boolean;
-}
-
+import { ProfileData } from "./types/profileDtata";
+import StatComponents from "./components/StatsComponents/StatComponents";
+import ErrorPage from "@/app/error/page";
 interface ProfileResponse {
   success: boolean;
   data?: ProfileData;
   error?: string;
 }
 
-export default function ProfilePage() {
-  const params = useParams();
+export default function ProfilePage({
+  params,
+}: {
+  params: { params?: string | any };
+}) {
+  const Params = useParams();
   const router = useRouter();
   const { user, isLoaded } = useUser();
-
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
   // Determine if this is own profile or someone else's
-  const username = params?.params?.[0] as string;
+  const username = Params?.params?.[0] as string;
   const isOwnProfile = !username; // /profile = own profile, /profile/username = other's profile
   const [followersModalState, setFollowersModalState] = useState<{
     isOpen: boolean;
@@ -200,38 +171,7 @@ export default function ProfilePage() {
 
   // Error state
   if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Header with Search */}
-
-        {/* Error Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <ExclamationTriangleIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Profile Not Found
-            </h2>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Go to Dashboard
-              </button>
-              {!isOwnProfile && (
-                <button
-                  onClick={() => router.back()}
-                  className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Go Back
-                </button>
-              )}
-            </div>
-          </div>
-        </main>
-      </div>
-    );
+    <ErrorPage />;
   }
 
   // No profile data

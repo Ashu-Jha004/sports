@@ -14,35 +14,8 @@ import {
   HeartIcon,
   EyeIcon,
 } from "@heroicons/react/24/outline";
-
-interface ProfileData {
-  id: string;
-  username: string;
-  firstName: string | null;
-  lastName: string | null;
-  bio: string | null;
-  avatarUrl: string | null;
-  primarySport: string | null;
-  rank: string | null;
-  class: string | null;
-  role: string;
-  city: string | null;
-  state: string | null;
-  country: string | null;
-  location: {
-    lat: number | 0;
-    lon: number | 0;
-    city: string | null;
-    state: string | null;
-    country: string | null;
-  } | null;
-  dateOfBirth: string | null;
-  gender: string | null;
-  email: string | null;
-  createdAt: string;
-  updatedAt: string;
-  isOwnProfile: boolean;
-}
+import { ProfileData } from "../../types/profileDtata";
+import { StatsTab } from "./ProfileTabComponents/StatsTab";
 
 interface ProfileTabsProps {
   profileData: ProfileData;
@@ -343,40 +316,7 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({ profileData }) => {
     </div>
   );
 
-  // Stats Tab Content (Placeholder)
-  const StatsTab = () => (
-    <div className="space-y-6">
-      <div className="bg-gray-50 rounded-lg p-8 text-center">
-        <ChartBarIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Statistics Coming Soon
-        </h3>
-        <p className="text-gray-600 mb-4">
-          Detailed performance metrics and achievements will be available here.
-        </p>
-
-        {/* Placeholder Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-          {[
-            { label: "Performance Score", value: "--", icon: "📊" },
-            { label: "Achievements", value: "--", icon: "🏆" },
-            { label: "Training Hours", value: "--", icon: "⏱️" },
-          ].map((stat, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-lg p-6 border border-gray-200"
-            >
-              <div className="text-2xl mb-2">{stat.icon}</div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">
-                {stat.value}
-              </div>
-              <div className="text-sm text-gray-600">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  <StatsTab />;
 
   // Activity Tab Content (Placeholder)
   const ActivityTab = () => (

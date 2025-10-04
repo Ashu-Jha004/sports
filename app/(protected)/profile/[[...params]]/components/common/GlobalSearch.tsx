@@ -9,7 +9,8 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { useDebounce } from "@/hooks/useDebounce";
-
+import { getRankEmoji } from "../../types/profileDtata";
+import { getClassColor } from "../../types/profileDtata";
 interface SearchUser {
   id: string;
   username: string;
@@ -173,44 +174,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     inputRef.current?.focus();
   }, []);
 
-  // Get rank emoji
-  const getRankEmoji = (rank: string | null) => {
-    switch (rank) {
-      case "KING":
-        return "👑";
-      case "QUEEN":
-        return "👸";
-      case "ROOK":
-        return "🏰";
-      case "BISHOP":
-        return "⛪";
-      case "KNIGHT":
-        return "🐎";
-      case "PAWN":
-        return "♟️";
-      default:
-        return "🏆";
-    }
-  };
-
-  // Get class color
-  const getClassColor = (classLevel: string | null) => {
-    switch (classLevel) {
-      case "A":
-        return "text-red-600 bg-red-50";
-      case "B":
-        return "text-orange-600 bg-orange-50";
-      case "C":
-        return "text-yellow-600 bg-yellow-50";
-      case "D":
-        return "text-blue-600 bg-blue-50";
-      case "E":
-        return "text-gray-600 bg-gray-50";
-      default:
-        return "text-gray-600 bg-gray-50";
-    }
-  };
-
   return (
     <div ref={searchRef} className={`relative ${className}`}>
       {/* Search Input */}
@@ -235,7 +198,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
         {/* Clear Button */}
         {query && (
-          <button title="Clear search"
+          <button
+            title="Clear search"
             onClick={clearSearch}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 transition-colors"
           >
