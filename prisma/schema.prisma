@@ -175,7 +175,7 @@ model User {
 
   actorNotifications Notification[]    @relation("NotificationActor")
 
-  @@index([createdAt, username])
+  @@index([createdAt, username,id,clerkId])
 }
 
 model AdminAction {
@@ -355,6 +355,7 @@ model Guide{
  createdAt   DateTime   @default(now())
  updatedAt   DateTime   @updatedAt
   @@map("Guide")
+  @@index([id,PrimarySports,Sports,lat,lon,city,country,status])
 }
 
 // Initial evaluation request from user to guide
@@ -375,7 +376,7 @@ model PhysicalEvaluationRequest {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+  @@index([OTP, guideId,userId])
   @@map("physical_evaluation_requests")
 }
 

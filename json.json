@@ -1,56 +1,8 @@
 {
-  "task": [
-    "optimze the codebase based on best practices",
-    "refine codebase",
-    "Modularze the codebase for better maintainability",
-    "Implement error handling and logging",
-    "Enhance security measures",
-    "Improve performance and scalability",
-    "create reusable components",
-    "reduce code duplication",
-    "ensure code readability and consistency",
-    "add comments and documentation where necessary",
-    "refactor complex functions into smaller, manageable ones",
-    "remove unused code and dependencies",
-    "refine project structure for clarity",
-    "review the codebase for potential bugs and fix them",
-    "optimize database queries and interactions",
-    "implement caching strategies where applicable",
-    "ensure compliance with coding standards and guidelines"
-  ],
-  "conditions": [
-    "do not change the functionality of the code",
-    "maintain existing features",
-    "focus on code quality and structure",
-    "prioritize readability and maintainability",
-    "adhere to best practices in coding",
-    "ensure the code is well-documented",
-    "avoid introducing new bugs",
-    "optimize for performance",
-    "Modularization of the codebase",
-    "scalable",
-    "secure",
-    "efficient",
-    "clean",
-    "readable",
-    "maintainable",
-    "do not break existing codebase",
-    "divide code into smaller, reusable components",
-    "follow coding standards and guidelines",
-    "use meaningful variable and function names"
-  ],
-  "wokring": [
-    "I'll give you all the files in the project one by one. After giving you all the files, I'll say 'Now, optimize the codebase'. Then, you'll provide me with the optimized codebase based on the tasks and conditions mentioned above.",
-    "analyze the codebase and identify areas for improvement based on the tasks and conditions mentioned above.",
-    "refactor the code to enhance readability, maintainability, and performance.",
-    "give me the optimized files one by one but ask permission after each file.",
-    "ask for permission to proceed to the next file after providing each optimized file.",
-    "ensure that the optimized code adheres to best practices and coding standards.",
-    "provide explanations for the changes made in each file, if necessary.",
-    "confirm with me before finalizing the optimized codebase.",
-    "if new files or components are created,give me the code for those files and their destination, give each file one by one and ask permission .",
-    "ensure that the optimized codebase is free of bugs and functions as intended, add proper error handling.",
-    "carefully add changes to avoid introducing new bugs or error that break the current working codebase.",
-    "instruct me what to do after providing all the optimized files, for code safty so that application do break."
-  ]
+    I want you create a component like "Quick Overview" component in existing application, this component has option called "Stat Update". when user click this option, a dialog box appears with a input box and two buttons. one button is initially disabled, second button is called "verify" button, which takes the "OTP" data from input box that was entered by the guide. Once Verify button is clicked, system takes the input and find a "PhysicalEvaluationRequest" record with same "OTP" and checks the "Status" of that record. if status is "accepted" than find basic user details of user, whose request was accepted by guide, to do that use "UserId" from "PhysicalEvaluationRequest" and find the user details of that same "UserId". Once user found, than show that users basic info like firstname, username, primary sport, profile Image Url, role, Rank
+Class,
+country,
+state,
+city,
+gender,  on to the component, below the the input box and  enable the disabled button. This button will navigate user to new page with url: "{baseUrl}/business/services/stats/{userId}.  In this page, is where guide will initiate the stats update process of Athletes/users of same "userId" from "PhysicalEvaluationRequest"
 }
