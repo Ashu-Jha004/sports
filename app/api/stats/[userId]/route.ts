@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 
-// Validation Schemas
+// Validation schemas
 const basicMetricsSchema = z.object({
   height: z.number().min(100).max(250),
   weight: z.number().min(30).max(200),
@@ -55,7 +55,39 @@ const statsSubmissionSchema = z.object({
   isUpdate: z.boolean().optional(),
 });
 
-// GET - Fetch existing stats
+// Helper function to check moderator role
+async function checkModeratorAccess(clerkUserId: string) {
+  const user = await prisma.user.findUnique({
+    where: { clerkId: clerkUserId },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      role: true,
+      roles: true,
+    },
+  });
+
+  if (!user) {
+    return { isAuthorized: false, error: "User not found" };
+  }
+  let guideRole = user.roles.includes("MODERATOR");
+
+  // Check if user is moderator (adjust role names as needed)
+  if (guideRole == false) {
+    return {
+      isAuthorized: false,
+      error: "Access denied. Only moderators can update athlete stats.",
+    };
+  }
+
+  return {
+    isAuthorized: true,
+    user,
+  };
+}
+
+// ✅ GET - Fetch ALL stats records (current + historical)
 export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }
@@ -66,54 +98,108 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // ✅ FIX: Proper params handling for Next.js 15
     const { userId } = await params;
-    console.log("🔍 GET Stats API: Fetching stats for:", userId);
+    console.log("🔍 GET Stats API: Fetching all stats for athlete:", userId);
 
-    // Verify user exists
-    const user = await prisma.user.findUnique({
+    // Verify athlete exists
+    const athlete = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true },
+      select: { id: true, firstName: true, lastName: true },
     });
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!athlete) {
+      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
     }
 
-    // Fetch existing stats with all related data
+    // ✅ Fetch ALL stats records (current + historical arrays)
     const stats = await prisma.stats.findUnique({
       where: { userId },
       include: {
-        strength: true,
-        speed: true,
-        stamina: true,
+        // Get ALL strength records (historical tracking)
+        strength: {
+          orderBy: { createdAt: "desc" },
+        },
+        // Get ALL speed records
+        speed: {
+          orderBy: { createdAt: "desc" },
+        },
+        // Get ALL stamina records
+        stamina: {
+          orderBy: { createdAt: "desc" },
+        },
+        // Get ALL injury records
         injuries: {
           orderBy: { createdAt: "desc" },
+        },
+        // Get update history
+        history: {
+          orderBy: { createdAt: "desc" },
+          take: 10, // Limit to recent 10 updates
         },
       },
     });
 
-    console.log("✅ GET Stats API: Found stats:", !!stats);
-
     if (!stats) {
+      console.log(
+        "ℹ️ GET Stats API: No stats found for athlete, returning null"
+      );
       return NextResponse.json(null);
     }
 
+    console.log("✅ GET Stats API: Found stats with historical data:", {
+      strengthRecords: stats.strength.length,
+      speedRecords: stats.speed.length,
+      staminaRecords: stats.stamina.length,
+      injuryRecords: stats.injuries.length,
+      historyRecords: stats.history.length,
+    });
+
+    // ✅ Return ALL data (current + historical)
+    // ✅ REPLACE: The entire return NextResponse.json() section in GET method with this:
     return NextResponse.json({
+      // Main stats info
       id: stats.id,
+      userId: stats.userId,
       height: stats.height,
       weight: stats.weight,
       age: stats.age,
       bodyFat: stats.bodyFat,
-      strength: stats.strength,
-      speed: stats.speed,
-      stamina: stats.stamina,
-      injuries: stats.injuries,
+
+      // ✅ NEW: Current values (latest from each array) - what the wizard expects
+      currentStrength: stats.strength[0] || null,
+      currentSpeed: stats.speed[0] || null,
+      currentStamina: stats.stamina[0] || null,
+      activeInjuries: stats.injuries.filter(
+        (injury) => injury.status === "active" || injury.status === "recovering"
+      ),
+
+      // ✅ BACKWARD COMPATIBILITY: Keep old field names for existing frontend code
+      strength: stats.strength[0] || null,
+      speed: stats.speed[0] || null,
+      stamina: stats.stamina[0] || null,
+      injuries: stats.injuries.filter(
+        (injury) => injury.status === "active" || injury.status === "recovering"
+      ),
+
+      // ✅ NEW: Historical arrays (for future features)
+      strengthHistory: stats.strength,
+      speedHistory: stats.speed,
+      staminaHistory: stats.stamina,
+      injuryHistory: stats.injuries,
+
+      // Metadata
       lastUpdatedBy: stats.lastUpdatedBy,
       lastUpdatedAt: stats.lastUpdatedAt,
       lastUpdatedByName: stats.lastUpdatedByName,
       createdAt: stats.createdAt,
       updatedAt: stats.updatedAt,
+
+      // ✅ NEW: Athlete info
+      athlete: {
+        id: athlete.id,
+        firstName: athlete.firstName,
+        lastName: athlete.lastName,
+      },
     });
   } catch (error) {
     console.error("❌ GET Stats API Error:", error);
@@ -124,111 +210,7 @@ export async function GET(
   }
 }
 
-// POST - Create new stats
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { userId: string } }
-) {
-  try {
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // ✅ FIX: Proper params handling
-    const { userId } = await params;
-    console.log("🔍 POST Stats API: Creating stats for:", userId);
-
-    // Get current user (guide)
-    const currentUser = await prisma.user.findUnique({
-      where: { clerkId: clerkUserId },
-      select: { id: true, firstName: true, lastName: true },
-    });
-
-    if (!currentUser) {
-      return NextResponse.json({ error: "Guide not found" }, { status: 404 });
-    }
-
-    const body = await request.json();
-    console.log("📥 POST Stats API: Request body keys:", Object.keys(body));
-
-    // Validate request data
-    const validation = statsSubmissionSchema.safeParse(body);
-    if (!validation.success) {
-      console.error(
-        "❌ POST Stats API: Validation failed:",
-        validation.error.issues
-      );
-      return NextResponse.json(
-        { error: "Invalid data", details: validation.error.issues },
-        { status: 400 }
-      );
-    }
-
-    const {
-      basicMetrics,
-      strengthPower,
-      speedAgility,
-      staminaRecovery,
-      injuries,
-    } = validation.data;
-
-    // Check if stats already exist
-    const existingStats = await prisma.stats.findUnique({
-      where: { userId },
-    });
-
-    if (existingStats) {
-      console.log("⚠️ POST Stats API: Stats already exist, should use PUT");
-      return NextResponse.json(
-        { error: "Stats already exist. Use PUT to update." },
-        { status: 409 }
-      );
-    }
-
-    // Create stats with transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create main stats record
-      const stats = await tx.stats.create({
-        data: {
-          userId,
-          height: basicMetrics.height,
-          weight: basicMetrics.weight,
-          age: basicMetrics.age,
-          bodyFat: basicMetrics.bodyFat,
-          lastUpdatedBy: currentUser.id,
-          lastUpdatedAt: new Date(),
-          lastUpdatedByName: `${currentUser.firstName} ${
-            currentUser.lastName || ""
-          }`.trim(),
-        },
-      });
-
-      // Create related records...
-      // (keeping the rest of the transaction logic)
-
-      return stats;
-    });
-
-    console.log("✅ POST Stats API: Stats created successfully");
-    return NextResponse.json(
-      {
-        success: true,
-        statsId: result.id,
-        message: "Stats created successfully",
-      },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("❌ POST Stats API Error:", error);
-    return NextResponse.json(
-      { error: "Failed to create stats" },
-      { status: 500 }
-    );
-  }
-}
-
-// PUT - Update existing stats
+// ✅ PUT - Update stats with history backup
 export async function PUT(
   request: NextRequest,
   { params }: { params: { userId: string } }
@@ -236,29 +218,37 @@ export async function PUT(
   try {
     const { userId: clerkUserId } = await auth();
     if (!clerkUserId) {
-      console.log("❌ PUT Stats API: Unauthorized");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // ✅ FIX: Proper params handling for Next.js 15
-    const { userId } = await params;
-    console.log("🔍 PUT Stats API: Updating stats for:", userId);
-
-    // Get current user (guide)
-    const currentUser = await prisma.user.findUnique({
-      where: { clerkId: clerkUserId },
-      select: { id: true, firstName: true, lastName: true },
-    });
-
-    if (!currentUser) {
-      console.log("❌ PUT Stats API: Guide not found");
-      return NextResponse.json({ error: "Guide not found" }, { status: 404 });
+    // ✅ Check moderator access
+    const accessCheck = await checkModeratorAccess(clerkUserId);
+    if (!accessCheck.isAuthorized) {
+      console.log("❌ PUT Stats API: Access denied:", accessCheck.error);
+      return NextResponse.json({ error: accessCheck.error }, { status: 403 });
     }
 
-    console.log("✅ PUT Stats API: Current user found:", currentUser.firstName);
-
+    const currentUser = accessCheck.user!;
+    const { userId } = await params;
     const body = await request.json();
-    console.log("📥 PUT Stats API: Request body keys:", Object.keys(body));
+
+    // Validate user ID match
+    if (body.userId !== userId) {
+      console.error("❌ PUT Stats API: User ID mismatch!");
+      return NextResponse.json(
+        {
+          error: "User ID mismatch - potential data corruption prevented",
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log(
+      "🔍 PUT Stats API: Updating stats for athlete:",
+      userId,
+      "by moderator:",
+      currentUser.firstName
+    );
 
     // Validate request data
     const validation = statsSubmissionSchema.safeParse(body);
@@ -281,42 +271,137 @@ export async function PUT(
       injuries,
     } = validation.data;
 
-    // Check if stats exist
-    const existingStats = await prisma.stats.findUnique({
-      where: { userId },
-      include: {
-        strength: true,
-        speed: true,
-        stamina: true,
-        injuries: true,
-      },
-    });
+    // ✅ Main transaction: Backup old data, then update with new data
+    const result = await prisma.$transaction(
+      async (tx) => {
+        console.log("🔄 PUT Transaction: Starting update with history backup");
 
-    console.log("🔍 PUT Stats API: Existing stats found:", !!existingStats);
-
-    // ✅ FIX: If no existing stats, create them instead of returning 404
-    if (!existingStats) {
-      console.log("📝 PUT Stats API: No existing stats, creating new ones");
-
-      // Create new stats
-      const result = await prisma.$transaction(async (tx) => {
-        // Create main stats record
-        const stats = await tx.stats.create({
-          data: {
-            userId,
-            height: basicMetrics.height,
-            weight: basicMetrics.weight,
-            age: basicMetrics.age,
-            bodyFat: basicMetrics.bodyFat,
-            lastUpdatedBy: currentUser.id,
-            lastUpdatedAt: new Date(),
-            lastUpdatedByName: `${currentUser.firstName} ${
-              currentUser.lastName || ""
-            }`.trim(),
+        // Step 1: Get current stats to backup
+        const currentStats = await tx.stats.findUnique({
+          where: { userId },
+          include: {
+            strength: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+            },
+            speed: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+            },
+            stamina: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+            },
+            injuries: {
+              where: {
+                status: { in: ["active", "recovering"] },
+              },
+            },
           },
         });
 
-        // Create strength & power record
+        let stats;
+
+        if (currentStats) {
+          // ✅ Step 2: Backup current values to history
+          const oldValues = [];
+          const newValues = [];
+
+          // Backup basic metrics
+          if (currentStats.height !== basicMetrics.height) {
+            oldValues.push({ field: "height", value: currentStats.height });
+            newValues.push({ field: "height", value: basicMetrics.height });
+          }
+          if (currentStats.weight !== basicMetrics.weight) {
+            oldValues.push({ field: "weight", value: currentStats.weight });
+            newValues.push({ field: "weight", value: basicMetrics.weight });
+          }
+          if (currentStats.age !== basicMetrics.age) {
+            oldValues.push({ field: "age", value: currentStats.age });
+            newValues.push({ field: "age", value: basicMetrics.age });
+          }
+          if (currentStats.bodyFat !== basicMetrics.bodyFat) {
+            oldValues.push({ field: "bodyFat", value: currentStats.bodyFat });
+            newValues.push({ field: "bodyFat", value: basicMetrics.bodyFat });
+          }
+
+          // Backup performance data
+          if (currentStats.strength[0]) {
+            oldValues.push({
+              field: "strength",
+              value: currentStats.strength[0],
+            });
+          }
+          if (currentStats.speed[0]) {
+            oldValues.push({ field: "speed", value: currentStats.speed[0] });
+          }
+          if (currentStats.stamina[0]) {
+            oldValues.push({
+              field: "stamina",
+              value: currentStats.stamina[0],
+            });
+          }
+          if (currentStats.injuries.length > 0) {
+            oldValues.push({ field: "injuries", value: currentStats.injuries });
+          }
+
+          newValues.push(
+            { field: "strength", value: strengthPower },
+            { field: "speed", value: speedAgility },
+            { field: "stamina", value: staminaRecovery },
+            { field: "injuries", value: injuries }
+          );
+
+          // Create history record
+          if (oldValues.length > 0) {
+            await tx.statsHistory.create({
+              data: {
+                StatsId: currentStats.id,
+                oldValues: oldValues,
+                newValues: newValues,
+                updatedBy: currentUser.id,
+                updatedByName: `${currentUser.firstName} ${
+                  currentUser.lastName || ""
+                }`.trim(),
+              },
+            });
+            console.log("✅ PUT Transaction: History record created");
+          }
+
+          // ✅ Step 3: Update main stats record
+          stats = await tx.stats.update({
+            where: { userId },
+            data: {
+              height: basicMetrics.height,
+              weight: basicMetrics.weight,
+              age: basicMetrics.age,
+              bodyFat: basicMetrics.bodyFat,
+              lastUpdatedBy: currentUser.id,
+              lastUpdatedAt: new Date(),
+              lastUpdatedByName: `${currentUser.firstName} ${
+                currentUser.lastName || ""
+              }`.trim(),
+            },
+          });
+        } else {
+          // Create new stats record
+          stats = await tx.stats.create({
+            data: {
+              userId,
+              height: basicMetrics.height,
+              weight: basicMetrics.weight,
+              age: basicMetrics.age,
+              bodyFat: basicMetrics.bodyFat,
+              lastUpdatedBy: currentUser.id,
+              lastUpdatedAt: new Date(),
+              lastUpdatedByName: `${currentUser.firstName} ${
+                currentUser.lastName || ""
+              }`.trim(),
+            },
+          });
+        }
+
+        // ✅ Step 4: Create new records in performance arrays (this preserves history)
         await tx.strengthAndPower.create({
           data: {
             statId: stats.id,
@@ -326,8 +411,8 @@ export async function PUT(
             explosivePower: strengthPower.explosivePower,
           },
         });
+        console.log("✅ PUT Transaction: New strength record created");
 
-        // Create speed & agility record
         await tx.speedAndAgility.create({
           data: {
             statId: stats.id,
@@ -339,8 +424,8 @@ export async function PUT(
             coordination: speedAgility.coordination,
           },
         });
+        console.log("✅ PUT Transaction: New speed record created");
 
-        // Create stamina & recovery record
         await tx.staminaAndRecovery.create({
           data: {
             statId: stats.id,
@@ -349,8 +434,24 @@ export async function PUT(
             recoveryTime: staminaRecovery.recoveryTime,
           },
         });
+        console.log("✅ PUT Transaction: New stamina record created");
 
-        // Create injury records
+        // ✅ Step 5: Handle injuries (mark old as recovered, create new active ones)
+        if (currentStats) {
+          // Mark existing active injuries as recovered
+          await tx.injuryStat.updateMany({
+            where: {
+              statId: stats.id,
+              status: { in: ["active", "recovering"] },
+            },
+            data: {
+              status: "recovered",
+              recoveredAt: new Date(),
+            },
+          });
+        }
+
+        // Create new injury records
         if (injuries.length > 0) {
           await tx.injuryStat.createMany({
             data: injuries.map((injury) => ({
@@ -367,25 +468,95 @@ export async function PUT(
               notes: injury.notes,
             })),
           });
+          console.log(
+            `✅ PUT Transaction: ${injuries.length} new injury records created`
+          );
         }
 
+        console.log("✅ PUT Transaction: All updates completed successfully");
         return stats;
-      });
+      },
+      {
+        timeout: 25000, // 25 second timeout for complex operations
+      }
+    );
 
-      console.log("✅ PUT Stats API: New stats created successfully");
-      return NextResponse.json({
-        success: true,
-        statsId: result.id,
-        message: "Stats created successfully",
-      });
+    console.log(
+      "✅ PUT Stats API: Stats updated successfully with history backup"
+    );
+    return NextResponse.json({
+      success: true,
+      statsId: result.id,
+      message:
+        "Stats updated successfully. Previous data backed up to history.",
+      updatedBy: `${currentUser.firstName} ${
+        currentUser.lastName || ""
+      }`.trim(),
+    });
+  } catch (error) {
+    console.error("❌ PUT Stats API Error:", error);
+    return NextResponse.json(
+      { error: "Failed to update stats" },
+      { status: 500 }
+    );
+  }
+}
+
+// ✅ POST - Create initial stats (for new athletes)
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { userId: string } }
+) {
+  try {
+    const { userId: clerkUserId } = await auth();
+    if (!clerkUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Update existing stats
+    // Check moderator access
+    const accessCheck = await checkModeratorAccess(clerkUserId);
+    if (!accessCheck.isAuthorized) {
+      return NextResponse.json({ error: accessCheck.error }, { status: 403 });
+    }
+
+    const currentUser = accessCheck.user!;
+    const { userId } = await params;
+    const body = await request.json();
+
+    // Validate request
+    const validation = statsSubmissionSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Invalid data", details: validation.error.issues },
+        { status: 400 }
+      );
+    }
+
+    // Check if stats already exist
+    const existingStats = await prisma.stats.findUnique({
+      where: { userId },
+    });
+
+    if (existingStats) {
+      return NextResponse.json(
+        { error: "Stats already exist for this athlete. Use PUT to update." },
+        { status: 409 }
+      );
+    }
+
+    const {
+      basicMetrics,
+      strengthPower,
+      speedAgility,
+      staminaRecovery,
+      injuries,
+    } = validation.data;
+
+    // Create initial stats
     const result = await prisma.$transaction(async (tx) => {
-      // Update main stats record
-      const stats = await tx.stats.update({
-        where: { userId },
+      const stats = await tx.stats.create({
         data: {
+          userId,
           height: basicMetrics.height,
           weight: basicMetrics.weight,
           age: basicMetrics.age,
@@ -398,67 +569,20 @@ export async function PUT(
         },
       });
 
-      // Update strength & power record
-      await tx.strengthAndPower.upsert({
-        where: { statId: stats.id },
-        update: {
-          strength: strengthPower.strength,
-          muscleMass: strengthPower.muscleMass,
-          enduranceStrength: strengthPower.enduranceStrength,
-          explosivePower: strengthPower.explosivePower,
-        },
-        create: {
-          statId: stats.id,
-          strength: strengthPower.strength,
-          muscleMass: strengthPower.muscleMass,
-          enduranceStrength: strengthPower.enduranceStrength,
-          explosivePower: strengthPower.explosivePower,
-        },
-      });
+      // Create initial performance records
+      await Promise.all([
+        tx.strengthAndPower.create({
+          data: { statId: stats.id, ...strengthPower },
+        }),
+        tx.speedAndAgility.create({
+          data: { statId: stats.id, ...speedAgility },
+        }),
+        tx.staminaAndRecovery.create({
+          data: { statId: stats.id, ...staminaRecovery },
+        }),
+      ]);
 
-      // Update speed & agility record
-      await tx.speedAndAgility.upsert({
-        where: { statId: stats.id },
-        update: {
-          sprintSpeed: speedAgility.sprintSpeed,
-          acceleration: speedAgility.acceleration,
-          agility: speedAgility.agility,
-          reactionTime: speedAgility.reactionTime,
-          balance: speedAgility.balance,
-          coordination: speedAgility.coordination,
-        },
-        create: {
-          statId: stats.id,
-          sprintSpeed: speedAgility.sprintSpeed,
-          acceleration: speedAgility.acceleration,
-          agility: speedAgility.agility,
-          reactionTime: speedAgility.reactionTime,
-          balance: speedAgility.balance,
-          coordination: speedAgility.coordination,
-        },
-      });
-
-      // Update stamina & recovery record
-      await tx.staminaAndRecovery.upsert({
-        where: { statId: stats.id },
-        update: {
-          vo2Max: staminaRecovery.vo2Max,
-          flexibility: staminaRecovery.flexibility,
-          recoveryTime: staminaRecovery.recoveryTime,
-        },
-        create: {
-          statId: stats.id,
-          vo2Max: staminaRecovery.vo2Max,
-          flexibility: staminaRecovery.flexibility,
-          recoveryTime: staminaRecovery.recoveryTime,
-        },
-      });
-
-      // Handle injuries - delete existing and create new ones
-      await tx.injuryStat.deleteMany({
-        where: { statId: stats.id },
-      });
-
+      // Create initial injury records
       if (injuries.length > 0) {
         await tx.injuryStat.createMany({
           data: injuries.map((injury) => ({
@@ -480,16 +604,18 @@ export async function PUT(
       return stats;
     });
 
-    console.log("✅ PUT Stats API: Stats updated successfully");
-    return NextResponse.json({
-      success: true,
-      statsId: result.id,
-      message: "Stats updated successfully",
-    });
-  } catch (error) {
-    console.error("❌ PUT Stats API Error:", error);
     return NextResponse.json(
-      { error: "Failed to update stats" },
+      {
+        success: true,
+        statsId: result.id,
+        message: "Initial stats created successfully",
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("❌ POST Stats API Error:", error);
+    return NextResponse.json(
+      { error: "Failed to create stats" },
       { status: 500 }
     );
   }

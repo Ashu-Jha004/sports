@@ -11,25 +11,10 @@ async function setupFounder() {
     console.log("🚀 Setting up founder admin access...");
 
     // Your actual values (already correct!)
-    const FOUNDER_CLERK_ID: any = process.env.FOUNDER_CLERK_ID;
-    const FOUNDER_EMAIL: any = process.env.FOUNDER_EMAIL;
+    const FOUNDER_CLERK_ID: any = "user_34JVjAbLTyVLislqBpT276ScnkZ";
+    const FOUNDER_EMAIL: any = "ashujha009322@gmail.com";
 
     // CORRECTED validation - check against placeholder values
-    if (FOUNDER_CLERK_ID === FOUNDER_CLERK_ID) {
-      console.error(
-        "❌ Please update FOUNDER_CLERK_ID with your actual Clerk User ID"
-      );
-      console.log("📋 To find your Clerk User ID:");
-      console.log("   1. Go to https://dashboard.clerk.com");
-      console.log("   2. Navigate to Users");
-      console.log("   3. Find your user and copy the User ID");
-      return;
-    }
-
-    if (FOUNDER_EMAIL === FOUNDER_EMAIL) {
-      console.error("❌ Please update FOUNDER_EMAIL with your actual email");
-      return;
-    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({

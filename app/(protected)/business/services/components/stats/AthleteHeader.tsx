@@ -12,17 +12,64 @@ import {
   Activity,
 } from "lucide-react";
 import { VerifiedUser } from "../../../types/otpVerification";
+// ✅ ADD: Import new type definitions
+import type { AthleteInfo } from "@/types/stats";
 
+// ✅ REPLACE: Update the props interface to support both VerifiedUser and AthleteInfo
 interface AthleteHeaderProps {
-  athlete: VerifiedUser;
+  athlete: VerifiedUser | AthleteInfo; // ✅ Allow both types
   className?: string;
+  showStatsInfo?: boolean; // ✅ ADD: Optional flag to show stats metadata
+  lastUpdatedBy?: string | null; // ✅ ADD: Optional stats metadata
+  lastUpdatedAt?: string | null; // ✅ ADD: Optional stats metadata
+  lastUpdatedByName?: string | null; // ✅ ADD: Optional stats metadata
 }
+// ✅ ADD: Helper function to normalize athlete data (add after the AthleteHeaderProps interface)
+const normalizeAthleteData = (athlete: VerifiedUser | AthleteInfo) => {
+  // Handle VerifiedUser type
+  if ("firstName" in athlete && "rank" in athlete) {
+    return {
+      id: athlete.id,
+      firstName: athlete.firstName,
+      username: athlete.username || null,
+      primarySport: athlete.primarySport || null,
+      profileImageUrl: athlete.profileImageUrl || null,
+      role: athlete.role || null,
+      rank: athlete.rank || null,
+      class: athlete.class || null,
+      city: athlete.city || null,
+      state: athlete.state || null,
+      country: athlete.country || null,
+    };
+  }
+
+  // Handle AthleteInfo type (simpler structure)
+  return {
+    id: athlete.id,
+    firstName: athlete.firstName,
+    lastName: athlete.lastName || null,
+    username: null,
+    primarySport: null,
+    profileImageUrl: null,
+    role: null,
+    rank: null,
+    class: null,
+    city: null,
+    state: null,
+    country: null,
+  };
+};
 
 export const AthleteHeader: React.FC<AthleteHeaderProps> = ({
   athlete,
   className = "",
+  showStatsInfo = false, // ✅ ADD
+  lastUpdatedBy, // ✅ ADD
+  lastUpdatedAt, // ✅ ADD
+  lastUpdatedByName,
 }) => {
   // Helper function to get user initials
+  const normalizedAthlete = normalizeAthleteData(athlete);
   const getUserInitials = (
     firstName: string | null,
     username: string | null
@@ -129,11 +176,14 @@ export const AthleteHeader: React.FC<AthleteHeaderProps> = ({
           <div className="flex-shrink-0">
             <Avatar className="h-16 w-16 border-2 border-indigo-200">
               <AvatarImage
-                src={athlete.profileImageUrl || undefined}
-                alt={`${athlete.firstName || "Athlete"}'s profile`}
+                src={normalizedAthlete.profileImageUrl || undefined}
+                alt={`${normalizedAthlete.firstName || "Athlete"}'s profile`}
               />
               <AvatarFallback className="bg-indigo-100 text-indigo-700 text-lg font-semibold">
-                {getUserInitials(athlete.firstName, athlete.username)}
+                {getUserInitials(
+                  normalizedAthlete.firstName,
+                  normalizedAthlete.username
+                )}
               </AvatarFallback>
             </Avatar>
           </div>
@@ -142,30 +192,33 @@ export const AthleteHeader: React.FC<AthleteHeaderProps> = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-3 mb-3">
               <h3 className="text-2xl font-bold text-gray-900 truncate">
-                {safeDisplayValue(athlete.firstName, "Unknown Athlete")}
+                {safeDisplayValue(
+                  normalizedAthlete.firstName,
+                  "Unknown Athlete"
+                )}
               </h3>
               <div className="flex items-center space-x-2">
                 <Badge
-                  variant={getRoleBadgeVariant(athlete.role)}
+                  variant={getRoleBadgeVariant(normalizedAthlete.role)}
                   className="flex items-center"
                 >
                   <Shield className="w-3 h-3 mr-1" />
-                  {safeDisplayValue(athlete.role, "User")}
+                  {safeDisplayValue(normalizedAthlete.role, "User")}
                 </Badge>
                 <Badge
-                  variant={getRankBadgeVariant(athlete.rank)}
+                  variant={getRankBadgeVariant(normalizedAthlete.rank)}
                   className="flex items-center"
                 >
                   <Crown className="w-3 h-3 mr-1" />
-                  {safeDisplayValue(athlete.rank, "Unranked")}
+                  {safeDisplayValue(normalizedAthlete.rank, "Unranked")}
                 </Badge>
               </div>
             </div>
-
-            {athlete.username && (
-              <p className="text-sm text-gray-600 mb-2">@{athlete.username}</p>
+            {normalizedAthlete.username && (
+              <p className="text-sm text-gray-600 mb-2">
+                @{normalizedAthlete.username}
+              </p>
             )}
-
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
               {/* Primary Sport */}
@@ -174,7 +227,7 @@ export const AthleteHeader: React.FC<AthleteHeaderProps> = ({
                 <div>
                   <p className="text-xs text-gray-500">Primary Sport</p>
                   <p className="text-sm font-medium text-gray-900">
-                    {safeDisplayValue(athlete.primarySport)}
+                    {safeDisplayValue(normalizedAthlete.primarySport)}
                   </p>
                 </div>
               </div>
@@ -185,7 +238,7 @@ export const AthleteHeader: React.FC<AthleteHeaderProps> = ({
                 <div>
                   <p className="text-xs text-gray-500">Class</p>
                   <p className="text-sm font-medium text-gray-900">
-                    Class {safeDisplayValue(athlete.class, "N/A")}
+                    Class {safeDisplayValue(normalizedAthlete.class, "N/A")}
                   </p>
                 </div>
               </div>
@@ -197,15 +250,14 @@ export const AthleteHeader: React.FC<AthleteHeaderProps> = ({
                   <p className="text-xs text-gray-500">Location</p>
                   <p className="text-sm font-medium text-gray-900 truncate">
                     {formatLocation(
-                      athlete.city,
-                      athlete.state,
-                      athlete.country
+                      normalizedAthlete.city,
+                      normalizedAthlete.state,
+                      normalizedAthlete.country
                     )}
                   </p>
                 </div>
               </div>
             </div>
-
             {/* Verification Status */}
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center space-x-2">
@@ -215,6 +267,24 @@ export const AthleteHeader: React.FC<AthleteHeaderProps> = ({
                 </p>
               </div>
             </div>
+            {showStatsInfo && (lastUpdatedBy || lastUpdatedAt) && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+                  <p className="text-sm font-medium text-blue-800">
+                    Stats Information
+                  </p>
+                </div>
+                <div className="mt-2 text-xs text-blue-700 space-y-1">
+                  {lastUpdatedByName && (
+                    <p>Last updated by: {lastUpdatedByName}</p>
+                  )}
+                  {lastUpdatedAt && (
+                    <p>Updated: {new Date(lastUpdatedAt).toLocaleString()}</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

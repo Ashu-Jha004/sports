@@ -1,7 +1,16 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { VerifiedUser } from "@/app/(protected)/business/types/otpVerification";
-
+import type {
+  StatsResponse,
+  StatsFormData,
+  BasicMetrics,
+  StrengthPowerForm,
+  SpeedAgilityForm,
+  StaminaRecoveryForm,
+  InjuryForm,
+  AthleteInfo,
+} from "@/types/stats";
 // Core Interfaces
 interface InjuryInput {
   id?: string;
@@ -52,29 +61,16 @@ interface WizardFormData {
   injuries: InjuryInput[];
 }
 
-interface ExistingStats {
-  id: string;
-  height: number | null;
-  weight: number | null;
-  age: number | null;
-  bodyFat: number | null;
-  strength?: StrengthPowerData;
-  speed?: SpeedAgilityData;
-  stamina?: StaminaRecoveryData;
-  injuries: any[];
-  lastUpdatedBy: string | null;
-  lastUpdatedAt: string | null;
-  lastUpdatedByName: string | null;
-}
 
 interface StatsWizardStore {
   // Athlete & Existing Data
   athlete: VerifiedUser | null;
-  existingStats: ExistingStats | null;
+  existingStats: StatsResponse | null;
   isLoadingStats: boolean;
-
+  isInitializing: boolean;
   // Wizard Navigation (12 steps total: 6 sections × 2 each)
   currentStep: number;
+  formData: StatsFormData; // ✅ Changed to use proper type
   completedSteps: Set<number>;
   totalSteps: 12;
 
@@ -93,9 +89,6 @@ interface StatsWizardStore {
       title: string;
     }
   >;
-
-  // Form Data
-  formData: WizardFormData;
 
   // Validation & State
   stepValidation: Record<number, boolean>;
@@ -244,6 +237,7 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
         athlete: null,
         existingStats: null,
         isLoadingStats: false,
+        isInitializing: false,
         currentStep: 1,
         completedSteps: new Set(),
         totalSteps: 12,
@@ -258,26 +252,81 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
         submitError: null,
 
         // Initialize Wizard
+        // ✅ REPLACE: The entire initializeWizard method
         initializeWizard: async (athlete: VerifiedUser) => {
-          console.log(
-            "🎯 Initializing stats wizard for athlete:",
-            athlete.firstName
-          );
+          set({ isInitializing: true, athlete });
 
-          set({
-            athlete,
-            currentStep: 1,
-            completedSteps: new Set(),
-            formData: getDefaultFormData(),
-            stepValidation: {},
-            stepErrors: {},
-            submitError: null,
-          });
+          try {
+            console.log(
+              "🔍 Initializing wizard for athlete:",
+              athlete.firstName
+            );
 
-          // Load existing stats if they exist
-          await get().loadExistingStats(athlete.id);
+            const response = await fetch(`/api/stats/${athlete.id}`);
+
+            if (response.ok) {
+              const statsData: StatsResponse | null = await response.json();
+
+              if (statsData) {
+                console.log("✅ Stats data loaded:", {
+                  hasStrength: !!statsData.currentStrength,
+                  hasSpeed: !!statsData.currentSpeed,
+                  hasStamina: !!statsData.currentStamina,
+                  activeInjuries: statsData.activeInjuries.length,
+                });
+
+                // ✅ UPDATED: Use currentX fields from new API response
+                set({
+                  existingStats: statsData,
+                  // ✅ UPDATE: Initial formData state with proper typing
+                  formData: {
+                    basicMetrics: {
+                      height: 0,
+                      weight: 0,
+                      age: 0,
+                      bodyFat: 0,
+                    },
+                    strengthPower: {
+                      strength: 0,
+                      muscleMass: 0,
+                      enduranceStrength: 0,
+                      explosivePower: 0,
+                    },
+                    speedAgility: {
+                      sprintSpeed: 0,
+                      acceleration: 0,
+                      agility: 0,
+                      reactionTime: 0,
+                      balance: 0,
+                      coordination: 0,
+                    },
+                    staminaRecovery: {
+                      vo2Max: 0,
+                      flexibility: 0,
+                      recoveryTime: 0,
+                    },
+                    injuries: [],
+                  } as StatsFormData, // ✅ Add type assertion
+                });
+
+                console.log("✅ Form data initialized from existing stats");
+              } else {
+                console.log(
+                  "ℹ️ No existing stats found, starting with empty form"
+                );
+                set({ existingStats: null });
+              }
+            } else {
+              console.log("⚠️ Failed to fetch stats, starting with empty form");
+              set({ existingStats: null });
+            }
+
+            set({ isInitializing: false });
+          } catch (error) {
+            console.error("❌ Failed to initialize wizard:", error);
+            set({ isInitializing: false, existingStats: null });
+          }
         },
-
         // Load Existing Stats
         loadExistingStats: async (userId: string) => {
           set({ isLoadingStats: true });

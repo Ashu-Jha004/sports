@@ -8,9 +8,13 @@ import { CircularProgress } from "../components/stats/CircularProgress";
 import { useWizardNavigation } from "@/hooks/useWizardNavigation";
 import { useStatsWizardStore } from "@/store/statsWizardStore";
 import { useOTPVerificationStore } from "../../stores/otpVerificationStore";
+// ✅ ADD: Import new type definitions
+import type { StatsResponse, AthleteInfo } from "@/types/stats";
+
 import {
   AlertCircle,
   Loader2,
+  BarChart3,
   ArrowLeft,
   Shield,
   RefreshCw,
@@ -28,7 +32,7 @@ export default function StatsUpdatePage() {
     verifiedUsersCache,
     isLoading: otpLoading,
   } = useOTPVerificationStore();
-  const { initializeWizard, athlete } = useStatsWizardStore();
+  const { initializeWizard, athlete, existingStats } = useStatsWizardStore();
 
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -381,8 +385,83 @@ export default function StatsUpdatePage() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="space-y-6">
           {/* Athlete Header */}
-          <AthleteHeader athlete={activeUser} />
+          <AthleteHeader
+            athlete={activeUser}
+            className="mb-6"
+            showStatsInfo={!!existingStats} // ✅ ADD: Show stats info if exists
+            lastUpdatedBy={existingStats?.lastUpdatedBy} // ✅ ADD: Pass stats metadata
+            lastUpdatedAt={existingStats?.lastUpdatedAt} // ✅ ADD: Pass stats metadata
+            lastUpdatedByName={existingStats?.lastUpdatedByName}
+          />
+          {existingStats && !isInitializing && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                <BarChart3 className="w-5 h-5 mr-2 text-indigo-600" />
+                Current Stats Overview
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Basic Metrics */}
+                <div className="bg-white p-3 rounded border">
+                  <h4 className="font-medium text-gray-700 mb-2">Physical</h4>
+                  <div className="text-sm space-y-1">
+                    {existingStats.height && (
+                      <p>Height: {existingStats.height} cm</p>
+                    )}
+                    {existingStats.weight && (
+                      <p>Weight: {existingStats.weight} kg</p>
+                    )}
+                    {existingStats.age && <p>Age: {existingStats.age} years</p>}
+                  </div>
+                </div>
 
+                {/* Strength */}
+                {existingStats.currentStrength && (
+                  <div className="bg-white p-3 rounded border">
+                    <h4 className="font-medium text-gray-700 mb-2">Strength</h4>
+                    <div className="text-sm space-y-1">
+                      <p>Overall: {existingStats.currentStrength.strength}</p>
+                      <p>
+                        Power: {existingStats.currentStrength.explosivePower}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Speed */}
+                {existingStats.currentSpeed && (
+                  <div className="bg-white p-3 rounded border">
+                    <h4 className="font-medium text-gray-700 mb-2">Speed</h4>
+                    <div className="text-sm space-y-1">
+                      <p>Sprint: {existingStats.currentSpeed.sprintSpeed}</p>
+                      <p>Agility: {existingStats.currentSpeed.agility}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* History Count */}
+                <div className="bg-white p-3 rounded border">
+                  <h4 className="font-medium text-gray-700 mb-2">Records</h4>
+                  <div className="text-sm space-y-1">
+                    <p>
+                      Assessments: {existingStats.strengthHistory?.length || 0}
+                    </p>
+                    <p>
+                      Active Injuries:{" "}
+                      {existingStats.activeInjuries?.length || 0}
+                    </p>
+                    {existingStats.lastUpdatedAt && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        Updated:{" "}
+                        {new Date(
+                          existingStats.lastUpdatedAt
+                        ).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Progress Sidebar */}

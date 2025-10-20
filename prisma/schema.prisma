@@ -222,9 +222,9 @@ model Stats {
   age               Int?
   bodyFat           Float?
   injuries          InjuryStat[]             @relation("InjuryStats") 
-  strength          StrengthAndPower?        @relation("StrengthAndPowerRelation")
-  speed             SpeedAndAgility?         @relation("SpeedAndAgilityRelation")
-  stamina           StaminaAndRecovery?      @relation("StaminaAndRecoveryRelation")
+  strength          StrengthAndPower[]        @relation("StrengthAndPowerRelation")
+  speed             SpeedAndAgility[]         @relation("SpeedAndAgilityRelation")
+  stamina           StaminaAndRecovery[]     @relation("StaminaAndRecoveryRelation")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
  // Metadata for tracking updates
@@ -233,7 +233,7 @@ model Stats {
   lastUpdatedByName String? // For display purposes
    history StatsHistory[]
      @@map("user_stats")
-  @@index([userId])
+  @@index([userId,createdAt,updatedAt])
 }
 
 // Individual injury tracking records
@@ -251,24 +251,26 @@ model InjuryStat {
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  @@index([statId])
+  @@index([statId,createdAt,updatedAt])
 }
 
 // Cardiovascular and recovery metrics
 model StaminaAndRecovery {
   id           String   @id @default(uuid())
-  statId       String   @unique
+  statId       String
   stats        Stats    @relation("StaminaAndRecoveryRelation", fields: [statId], references: [id], onDelete: Cascade)
   vo2Max       Float
   flexibility  Float
   recoveryTime Float
-  @@index([statId])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  @@index([statId,createdAt,updatedAt])
 }
 
 // Speed and agility performance metrics
 model SpeedAndAgility {
   id             String   @id @default(uuid())
-  statId         String   @unique
+  statId         String
   stats          Stats    @relation("SpeedAndAgilityRelation", fields: [statId], references: [id], onDelete: Cascade)
   sprintSpeed    Float
   acceleration   Float
@@ -276,19 +278,23 @@ model SpeedAndAgility {
   reactionTime   Float
   balance        Float
   coordination   Float
-  @@index([statId])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  @@index([statId,createdAt,updatedAt])
 }
 
 // Strength and power performance metrics
 model StrengthAndPower {
   id                  String   @id @default(uuid())
-  statId              String   @unique
+  statId              String
   stats               Stats    @relation("StrengthAndPowerRelation", fields: [statId], references: [id], onDelete: Cascade)
   strength            Float
   muscleMass          Float
   enduranceStrength   Float
   explosivePower      Float
-  @@index([statId])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  @@index([statId,createdAt,updatedAt])
 }
 
 // Complete audit trail of statistics changes
@@ -299,16 +305,16 @@ model StatsHistory {
   stats Stats @relation(fields: [StatsId], references: [id], onDelete: Cascade)
   
   // What was changed
-  fieldName    String
-  oldValue     String?
-  newValue     String?
+  oldValues     Json[]
+  newValues     Json[]
   
   // Who made the change
   updatedBy     String  // guide ID
   updatedByName String  // guide name for display
   
-  createdAt DateTime @default(now())
-  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  @@index([StatsId,createdAt,updatedAt])
   @@map("stats_history")
 }
 

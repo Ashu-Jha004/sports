@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import type { StatsResponse } from "@/types/stats";
 import {
   CheckCircle,
   Trophy,
@@ -31,15 +32,22 @@ export const SuccessStep: React.FC = () => {
   const [autoRedirect, setAutoRedirect] = useState(true);
 
   // Calculate overall performance score
+  // ✅ FIND the calculateOverallScore function and UPDATE it:
   const calculateOverallScore = () => {
+    const { formData } = useStatsWizardStore.getState();
+
     const scores = [
-      ...Object.values(formData.strengthPower).filter((v) => v !== null),
-      ...Object.values(formData.speedAgility).filter((v) => v !== null),
+      ...Object.values(formData.strengthPower).filter(
+        (v) => v !== null && v !== undefined
+      ),
+      ...Object.values(formData.speedAgility).filter(
+        (v) => v !== null && v !== undefined
+      ),
     ];
 
     if (scores.length === 0) return 0;
     return Math.round(
-      scores.reduce((sum, score) => sum + score!, 0) / scores.length
+      scores.reduce((sum, score) => sum + (score as number), 0) / scores.length
     );
   };
 
@@ -163,7 +171,6 @@ export const SuccessStep: React.FC = () => {
           <strong>{athlete?.firstName}</strong>
         </p>
       </div>
-
       {/* Security Cleanup Status */}
       <Card className="bg-blue-50 border-blue-200">
         <CardHeader>
@@ -220,8 +227,9 @@ export const SuccessStep: React.FC = () => {
           )}
         </CardContent>
       </Card>
-
       {/* Assessment Summary */}
+      // ✅ FIND the Assessment Summary Card and UPDATE to use existingStats if
+      available:
       <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
         <CardHeader>
           <CardTitle className="flex items-center text-green-900">
@@ -250,19 +258,32 @@ export const SuccessStep: React.FC = () => {
             <div className="text-center">
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {
-                    [
+                  {(() => {
+                    const { formData, existingStats } =
+                      useStatsWizardStore.getState();
+
+                    // Count current form data points
+                    const formDataPoints = [
                       ...Object.values(formData.basicMetrics),
                       ...Object.values(formData.strengthPower),
                       ...Object.values(formData.speedAgility),
                       ...Object.values(formData.staminaRecovery),
-                    ].filter((v) => v !== null && v !== undefined).length
-                  }
+                    ].filter((v) => v !== null && v !== undefined).length;
+
+                    // Add historical data count if available
+                    const historicalCount = existingStats
+                      ? (existingStats.strengthHistory?.length || 0) +
+                        (existingStats.speedHistory?.length || 0) +
+                        (existingStats.staminaHistory?.length || 0)
+                      : 0;
+
+                    return formDataPoints + historicalCount;
+                  })()}
                 </div>
                 <div className="text-sm font-medium text-gray-900">
                   Data Points
                 </div>
-                <p className="text-sm text-gray-600 mt-2">Metrics Recorded</p>
+                <p className="text-sm text-gray-600 mt-2">Total Records</p>
               </div>
             </div>
 
@@ -285,7 +306,6 @@ export const SuccessStep: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-
       {/* Auto-redirect Notice */}
       {cleanupStatus === "complete" && autoRedirect && countdown > 0 && (
         <Card className="bg-yellow-50 border-yellow-200">
@@ -303,7 +323,6 @@ export const SuccessStep: React.FC = () => {
           </CardContent>
         </Card>
       )}
-
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
         <Button
@@ -316,7 +335,6 @@ export const SuccessStep: React.FC = () => {
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
-
       {/* Footer Note */}
       <div className="text-center pt-6 border-t">
         <p className="text-sm text-gray-500">
