@@ -1,6 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+<!-- trunk-ignore(markdownlint/MD041) -->
 ## Getting Started
+
+DATABASE_URL="postgresql://postgres:ashujha007322@db.oktmesdagemiqkphpimd.supabase.co:5432/postgres"
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_c3Rhci1vc3ByZXktNzguY2xlcmsuYWNjb3VudHMuZGV2JA
+CLERK_SECRET_KEY=sk_test_ZUl25WdU7JzlMlmcoLLZYHT0kOL4JSBjAyK8JbT4cp
+NEXT_PUBLIC_CLERK_Athlete_SIGN_IN_URL=/athlete/sign-in
+NEXT_PUBLIC_CLERK_Athlete_SIGN_UP_URL=/athlete/sign-up
+NEXT_PUBLIC_CLERK_Business_SIGN_IN_URL=/business/sign-in
+NEXT_PUBLIC_CLERK_Business_SIGN_UP_URL=/business/sign-up
+NEXT_PUBLIC_CLERK_Athlete_SIGN_IN_FALLBACK_REDIRECT_URL=/athlete/profile
+NEXT_PUBLIC_CLERK_Athlete_SIGN_UP_FALLBACK_REDIRECT_URL=/athlete/onboarding
+NEXT_PUBLIC_CLERK_Athlete_SIGN_IN_FALLBACK_REDIRECT_URL=/athlete/profile
+NEXT_PUBLIC_CLERK_Athlete_SIGN_UP_FALLBACK_REDIRECT_URL=/athlete/profile
+CLERK_WEBHOOK_SIGNING_SECRET=whsec_KEe9wM0ndyX20vjfwdGTwJH6sVxpDq2x
+CLOUDINARY_URL=cloudinary://561384497728282:2uJaMBmiog8Q0zRxylCEFgzOaHc@ddlywvrkq
+CLOUDINARY_CLOUD_NAME=ddlywvrkq
+CLOUDINARY_API_KEY=561384497728282
+CLOUDINARY_API_SECRET=2uJaMBmiog8Q0zRxylCEFgzOaHc
+NEXT_PUBLIC_APP_URL=[http://localhost:3000]
+NODE_ENV=development
+JWT_SECRET="your-secure-secret-key"
+FOUNDER_CLERK_ID = "user_34JVjAbLTyVLislqBpT276ScnkZ";
+FOUNDER_EMAIL = ["ashujha009322@gmail.com"];
 
 First, run the development server:
 
@@ -12,25 +34,3 @@ yarn dev
 pnpm dev
 # or
 bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
