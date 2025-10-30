@@ -10,7 +10,6 @@ import {
   useSetCurrentStep,
   useResetWizard,
 } from "@/store/profileWizardStore";
-
 import { WizardHeader } from "./components/WizardHeader";
 import { WizardNavigation } from "./components/WizardNavigation";
 import { StepRenderer } from "./components/StepRenderer";
@@ -18,34 +17,12 @@ import { ErrorSummary } from "./components/ErrorSummary";
 import { ProgressBar } from "./ProgressBar";
 import { ExitConfirmationModal } from "./components/ExitConfirmationModal";
 import { LoadingOverlay } from "./components/LoadingOverlay";
-
+import { ProfileWizardProps } from "../../types/onboardingWizardTypes";
 import {
   validateFormDataChanges,
   createWizardStepInfo,
   WIZARD_CONFIG,
 } from "@/lib/utils/wizard";
-
-import type { ProfileFormData } from "@/types/profile";
-
-/**
- * =============================================================================
- * COMPONENT INTERFACE
- * =============================================================================
- */
-
-export interface ProfileWizardProps {
-  readonly onComplete?: (profileData: ProfileFormData) => void;
-  readonly onCancel?: () => void;
-  readonly className?: string;
-  readonly showHeader?: boolean;
-  readonly allowStepSkipping?: boolean;
-}
-
-/**
- * =============================================================================
- * MAIN WIZARD COMPONENT
- * =============================================================================
- */
 
 const ProfileWizard: React.FC<ProfileWizardProps> = ({
   onComplete,
@@ -187,6 +164,4 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({
     </div>
   );
 };
-
-ProfileWizard.displayName = "ProfileWizard";
 export default ProfileWizard;

@@ -13,17 +13,8 @@ import {
   WizardStepId,
   IMAGE_VALIDATION_CONFIG,
 } from "@/types/profile";
-import { mapGenderToDatabase } from "@/lib/validations";
 
-/**
- * =============================================================================
- * CONSTANTS & CONFIGURATION
- * =============================================================================
- */
 
-/**
- * Initial form data state with proper typing
- */
 const INITIAL_FORM_DATA: ProfileFormData = {
   // Location Information (Step 1)
   city: "",
@@ -92,11 +83,6 @@ const STORE_CONFIG = {
   UPLOAD_CHUNK_SIZE: 1024 * 1024, // 1MB
 } as const;
 
-/**
- * =============================================================================
- * UTILITY FUNCTIONS
- * =============================================================================
- */
 
 /**
  * Deep comparison utility for form data changes

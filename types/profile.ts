@@ -287,9 +287,3 @@ export type PartialProfileFormData = Partial<ProfileFormData>;
  * Utility type for wizard step IDs
  */
 export type WizardStepId = 1 | 2 | 3 | 4 | 5;
-
-/**
- * =============================================================================
- * EXPORTS
- * =============================================================================
- */
