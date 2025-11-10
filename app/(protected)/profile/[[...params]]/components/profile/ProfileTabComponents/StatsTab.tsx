@@ -1,6 +1,6 @@
 // app/(protected)/profile/[[...params]]/components/profile/ProfileTabComponents/StatsTab.tsx
 import { useEffect } from "react";
-import { ChartBarIcon } from "lucide-react";
+import { ChartBarIcon, UserSearch } from "lucide-react";
 import { useStatsStore } from "@/store/statsStore";
 import { useLocation } from "../../StatsComponents/hooks/useLocation";
 import { EmptyStatsState } from "../../StatsComponents/EmptyStatsState";
@@ -112,7 +112,11 @@ export const StatsTab = () => {
     <div className="space-y-6">
       {userStats ? (
         // User has stats - show actual stats display
-        <ActualStatsDisplay stats={userStats} />
+        <ActualStatsDisplay
+          stats={userStats}
+          onFindGuides={handleFindGuides}
+          loading={locationLoading}
+        />
       ) : (
         // User has no stats - show empty state with guide discovery
         <EmptyStatsState
@@ -149,7 +153,7 @@ export const StatsTab = () => {
 };
 
 // Actual Stats Display Component (for when user has stats)
-const ActualStatsDisplay = ({ stats }: { stats: any }) => (
+const ActualStatsDisplay = ({ stats, onFindGuides, loading = false }: any) => (
   <div className="space-y-6">
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
@@ -193,6 +197,26 @@ const ActualStatsDisplay = ({ stats }: { stats: any }) => (
         ))}
       </div>
     </div>
+    <button
+      onClick={onFindGuides}
+      disabled={loading}
+      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 
+                     disabled:bg-blue-400 text-white px-6 py-3 rounded-lg 
+                     font-medium transition-colors duration-200 focus:outline-none 
+                     focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+    >
+      {loading ? (
+        <>
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          Finding Guides...
+        </>
+      ) : (
+        <>
+          <UserSearch className="w-4 h-4" />
+          Find Nearby Guides
+        </>
+      )}
+    </button>
   </div>
 );
 

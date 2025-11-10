@@ -8,7 +8,6 @@ import ProfileTabs from "./components/profile/ProfileTabs";
 import EditProfileModal from "../../profile/[[...params]]/components/profile/EditProfileModal";
 import FollowersModal from "./components/profile/FollowersModal";
 import { ProfileData } from "./types/profileDtata";
-import StatComponents from "./components/StatsComponents/StatComponents";
 import ErrorPage from "@/app/error/page";
 interface ProfileResponse {
   success: boolean;
