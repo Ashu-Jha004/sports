@@ -3,39 +3,32 @@ import { devtools, persist } from "zustand/middleware";
 import { VerifiedUser } from "@/app/(protected)/business/types/otpVerification";
 import type {
   StatsResponse,
-  StatsFormData,
   BasicMetrics,
-  StrengthPowerForm,
   SpeedAgilityForm,
   StaminaRecoveryForm,
   InjuryForm,
-  AthleteInfo,
 } from "@/types/stats";
-// Core Interfaces
-interface InjuryInput {
-  id?: string;
-  type: string;
-  bodyPart: string;
-  severity: "mild" | "moderate" | "severe";
-  occurredAt: string;
-  recoveryTime: number | null;
-  recoveredAt: string | null;
-  status: "active" | "recovering" | "recovered";
-  notes: string;
+import type { StrengthPowerTestData } from "@/lib/stats/types/strengthTests";
+import { StrengthCalculations } from "@/lib/stats/types/strengthTests";
+
+// ============================================
+// UPDATED FORM DATA INTERFACE
+// ============================================
+
+interface WizardFormData {
+  basicMetrics: BasicMetricsData;
+  strengthPower: StrengthPowerTestData; // ✅ NEW: Uses detailed test structure
+  speedAgility: SpeedAgilityData;
+  staminaRecovery: StaminaRecoveryData;
+  injuries: InjuryInput[];
 }
 
+// Keep existing interfaces for other sections
 interface BasicMetricsData {
   height: number | null;
   weight: number | null;
   age: number | null;
   bodyFat: number | null;
-}
-
-interface StrengthPowerData {
-  strength: number | null;
-  muscleMass: number | null;
-  enduranceStrength: number | null;
-  explosivePower: number | null;
 }
 
 interface SpeedAgilityData {
@@ -53,28 +46,34 @@ interface StaminaRecoveryData {
   recoveryTime: number | null;
 }
 
-interface WizardFormData {
-  basicMetrics: BasicMetricsData;
-  strengthPower: StrengthPowerData;
-  speedAgility: SpeedAgilityData;
-  staminaRecovery: StaminaRecoveryData;
-  injuries: InjuryInput[];
+interface InjuryInput {
+  id?: string;
+  type: string;
+  bodyPart: string;
+  severity: "mild" | "moderate" | "severe";
+  occurredAt: string;
+  recoveryTime: number | null;
+  recoveredAt: string | null;
+  status: "active" | "recovering" | "recovered";
+  notes: string;
 }
 
+// ============================================
+// STORE INTERFACE
+// ============================================
 
 interface StatsWizardStore {
   // Athlete & Existing Data
   athlete: VerifiedUser | null;
   existingStats: StatsResponse | null;
   isLoadingStats: boolean;
-  isInitializing: boolean;
-  // Wizard Navigation (12 steps total: 6 sections × 2 each)
+  isInitializing: boolean; // Wizard Navigation
+
   currentStep: number;
-  formData: StatsFormData; // ✅ Changed to use proper type
+  formData: WizardFormData;
   completedSteps: Set<number>;
   totalSteps: 12;
 
-  // Step Mapping
   stepSections: Record<
     number,
     {
@@ -88,18 +87,36 @@ interface StatsWizardStore {
       type: "instruction" | "form";
       title: string;
     }
-  >;
+  >; // Validation & State
 
-  // Validation & State
   stepValidation: Record<number, boolean>;
   stepErrors: Record<number, string[]>;
   isDraftSaved: boolean;
   lastSavedAt: Date | null;
   isAutoSaving: boolean;
   isSubmitting: boolean;
-  submitError: string | null;
+  submitError: string | null; // ✅ NEW: Strength test specific actions
 
-  // Actions
+  addTestAttempt: (
+    testName: keyof StrengthPowerTestData,
+    attemptData: any
+  ) => void;
+  removeTestAttempt: (
+    testName: keyof StrengthPowerTestData,
+    attemptIndex: number
+  ) => void;
+  updateTestAttempt: (
+    testName: keyof StrengthPowerTestData,
+    attemptIndex: number,
+    attemptData: any
+  ) => void;
+  addTestSet: (testName: keyof StrengthPowerTestData, setData: any) => void;
+  removeTestSet: (
+    testName: keyof StrengthPowerTestData,
+    setIndex: number
+  ) => void;
+  recalculateScores: () => void; // Existing actions
+
   initializeWizard: (athlete: VerifiedUser) => Promise<void>;
   loadExistingStats: (userId: string) => Promise<void>;
   updateFormSection: (
@@ -123,7 +140,10 @@ interface StatsWizardStore {
   clearError: () => void;
 }
 
-// Step Configuration
+// ============================================
+// STEP CONFIGURATION (unchanged)
+// ============================================
+
 const STEP_CONFIG = {
   1: {
     section: "basicMetrics" as const,
@@ -187,7 +207,10 @@ const STEP_CONFIG = {
   },
 };
 
-// Default Form Data
+// ============================================
+// DEFAULT FORM DATA
+// ============================================
+
 const getDefaultFormData = (): WizardFormData => ({
   basicMetrics: {
     height: null,
@@ -196,10 +219,10 @@ const getDefaultFormData = (): WizardFormData => ({
     bodyFat: null,
   },
   strengthPower: {
-    strength: null,
-    muscleMass: null,
-    enduranceStrength: null,
-    explosivePower: null,
+    athleteBodyWeight: 0,
+    muscleMass: 0,
+    enduranceStrength: 0,
+    explosivePower: 0,
   },
   speedAgility: {
     sprintSpeed: null,
@@ -217,7 +240,6 @@ const getDefaultFormData = (): WizardFormData => ({
   injuries: [],
 });
 
-// Default Injury Template
 const getDefaultInjury = (): InjuryInput => ({
   type: "",
   bodyPart: "",
@@ -228,6 +250,10 @@ const getDefaultInjury = (): InjuryInput => ({
   status: "active",
   notes: "",
 });
+
+// ============================================
+// ZUSTAND STORE
+// ============================================
 
 export const useStatsWizardStore = create<StatsWizardStore>()(
   devtools(
@@ -249,10 +275,272 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
         lastSavedAt: null,
         isAutoSaving: false,
         isSubmitting: false,
-        submitError: null,
+        submitError: null, // ============================================ // ✅ NEW: STRENGTH TEST MANAGEMENT ACTIONS // ============================================
 
-        // Initialize Wizard
-        // ✅ REPLACE: The entire initializeWizard method
+        addTestAttempt: (testName, attemptData) => {
+          set((state) => {
+            const currentTest = state.formData.strengthPower[testName];
+
+            if (
+              !currentTest ||
+              typeof currentTest !== "object" ||
+              !("attempts" in currentTest)
+            ) {
+              // Initialize test with first attempt
+              const newTest = {
+                attempts: [
+                  {
+                    attemptNumber: 1,
+                    data: attemptData,
+                    notes: "",
+                  },
+                ],
+                bestAttempt: 0,
+              };
+
+              return {
+                formData: {
+                  ...state.formData,
+                  strengthPower: {
+                    ...state.formData.strengthPower,
+                    [testName]: newTest,
+                  },
+                },
+                isDraftSaved: false,
+              };
+            } // Add new attempt
+
+            const newAttempt = {
+              attemptNumber: currentTest.attempts.length + 1,
+              data: attemptData,
+              notes: "",
+            };
+
+            return {
+              formData: {
+                ...state.formData,
+                strengthPower: {
+                  ...state.formData.strengthPower,
+                  [testName]: {
+                    ...currentTest,
+                    attempts: [...currentTest.attempts, newAttempt],
+                  },
+                },
+              },
+              isDraftSaved: false,
+            };
+          });
+
+          setTimeout(() => {
+            get().recalculateScores();
+            get().autoSave();
+          }, 500);
+        },
+
+        removeTestAttempt: (testName, attemptIndex) => {
+          set((state) => {
+            const currentTest = state.formData.strengthPower[testName];
+
+            if (
+              !currentTest ||
+              typeof currentTest !== "object" ||
+              !("attempts" in currentTest)
+            ) {
+              return state;
+            }
+
+            const updatedAttempts = currentTest.attempts.filter(
+              (_, index) => index !== attemptIndex
+            ); // Renumber attempts
+
+            const renumberedAttempts = updatedAttempts.map(
+              (attempt, index) => ({
+                ...attempt,
+                attemptNumber: index + 1,
+              })
+            );
+
+            return {
+              formData: {
+                ...state.formData,
+                strengthPower: {
+                  ...state.formData.strengthPower,
+                  [testName]: {
+                    ...currentTest,
+                    attempts: renumberedAttempts,
+                    bestAttempt: undefined,
+                  },
+                },
+              },
+              isDraftSaved: false,
+            };
+          });
+
+          setTimeout(() => {
+            get().recalculateScores();
+            get().autoSave();
+          }, 500);
+        },
+
+        updateTestAttempt: (testName, attemptIndex, attemptData) => {
+          set((state) => {
+            const currentTest = state.formData.strengthPower[testName];
+
+            if (
+              !currentTest ||
+              typeof currentTest !== "object" ||
+              !("attempts" in currentTest)
+            ) {
+              return state;
+            }
+
+            const updatedAttempts = currentTest.attempts.map((attempt, index) =>
+              index === attemptIndex
+                ? { ...attempt, data: { ...attempt.data, ...attemptData } }
+                : attempt
+            );
+
+            return {
+              formData: {
+                ...state.formData,
+                strengthPower: {
+                  ...state.formData.strengthPower,
+                  [testName]: {
+                    ...currentTest,
+                    attempts: updatedAttempts,
+                  },
+                },
+              },
+              isDraftSaved: false,
+            };
+          });
+
+          setTimeout(() => {
+            get().recalculateScores();
+            get().autoSave();
+          }, 1000);
+        },
+
+        addTestSet: (testName, setData) => {
+          set((state) => {
+            const currentTest = state.formData.strengthPower[testName];
+
+            if (
+              !currentTest ||
+              typeof currentTest !== "object" ||
+              !("sets" in currentTest)
+            ) {
+              // Initialize test with first set
+              const newTest = {
+                sets: [setData],
+                maxLoad: setData.load || 0,
+                totalTimeUsed: setData.restAfter || 0,
+                totalReps: setData.reps || 0,
+              };
+
+              return {
+                formData: {
+                  ...state.formData,
+                  strengthPower: {
+                    ...state.formData.strengthPower,
+                    [testName]: newTest,
+                  },
+                },
+                isDraftSaved: false,
+              };
+            } // Add new set
+
+            return {
+              formData: {
+                ...state.formData,
+                strengthPower: {
+                  ...state.formData.strengthPower,
+                  [testName]: {
+                    ...currentTest,
+                    sets: [...currentTest.sets, setData],
+                  },
+                },
+              },
+              isDraftSaved: false,
+            };
+          });
+
+          setTimeout(() => {
+            get().recalculateScores();
+            get().autoSave();
+          }, 500);
+        },
+
+        removeTestSet: (testName, setIndex) => {
+          set((state) => {
+            const currentTest = state.formData.strengthPower[testName];
+
+            if (
+              !currentTest ||
+              typeof currentTest !== "object" ||
+              !("sets" in currentTest)
+            ) {
+              return state;
+            }
+
+            const updatedSets = currentTest.sets.filter(
+              (_, index) => index !== setIndex
+            );
+
+            return {
+              formData: {
+                ...state.formData,
+                strengthPower: {
+                  ...state.formData.strengthPower,
+                  [testName]: {
+                    ...currentTest,
+                    sets: updatedSets,
+                  },
+                },
+              },
+              isDraftSaved: false,
+            };
+          });
+
+          setTimeout(() => {
+            get().recalculateScores();
+            get().autoSave();
+          }, 500);
+        },
+
+        recalculateScores: () => {
+          set((state) => {
+            const strengthData = state.formData.strengthPower;
+
+            const explosivePower =
+              StrengthCalculations.calculateExplosivePowerScore(strengthData);
+            const muscleMass =
+              StrengthCalculations.calculateMuscleMassScore(strengthData);
+            const enduranceStrength =
+              StrengthCalculations.calculateEnduranceStrengthScore(
+                strengthData
+              );
+
+            console.log("🔢 Recalculated scores:", {
+              explosivePower: explosivePower.toFixed(1),
+              muscleMass: muscleMass.toFixed(1),
+              enduranceStrength: enduranceStrength.toFixed(1),
+            });
+
+            return {
+              formData: {
+                ...state.formData,
+                strengthPower: {
+                  ...strengthData,
+                  explosivePower: Math.round(explosivePower * 10) / 10,
+                  muscleMass: Math.round(muscleMass * 10) / 10,
+                  enduranceStrength: Math.round(enduranceStrength * 10) / 10,
+                },
+              },
+            };
+          });
+        }, // ============================================ // EXISTING ACTIONS (mostly unchanged) // ============================================
+
         initializeWizard: async (athlete: VerifiedUser) => {
           set({ isInitializing: true, athlete });
 
@@ -268,111 +556,44 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
               const statsData: StatsResponse | null = await response.json();
 
               if (statsData) {
-                console.log("✅ Stats data loaded:", {
-                  hasStrength: !!statsData.currentStrength,
-                  hasSpeed: !!statsData.currentSpeed,
-                  hasStamina: !!statsData.currentStamina,
-                  activeInjuries: statsData.activeInjuries.length,
-                });
+                console.log("✅ Stats data loaded");
 
-                // ✅ UPDATED: Use currentX fields from new API response
                 set({
                   existingStats: statsData,
-                  // ✅ UPDATE: Initial formData state with proper typing
                   formData: {
                     basicMetrics: {
-                      height: 0,
-                      weight: 0,
-                      age: 0,
-                      bodyFat: 0,
+                      height: statsData.height || null,
+                      weight: statsData.weight || null,
+                      age: statsData.age || null,
+                      bodyFat: statsData.bodyFat || null,
                     },
                     strengthPower: {
-                      strength: 0,
-                      muscleMass: 0,
-                      enduranceStrength: 0,
-                      explosivePower: 0,
+                      athleteBodyWeight: statsData.weight || 0,
+                      muscleMass: statsData.currentStrength?.muscleMass || 0,
+                      enduranceStrength:
+                        statsData.currentStrength?.enduranceStrength || 0,
+                      explosivePower:
+                        statsData.currentStrength?.explosivePower || 0,
                     },
                     speedAgility: {
-                      sprintSpeed: 0,
-                      acceleration: 0,
-                      agility: 0,
-                      reactionTime: 0,
-                      balance: 0,
-                      coordination: 0,
+                      sprintSpeed: statsData.currentSpeed?.sprintSpeed || null,
+                      acceleration:
+                        statsData.currentSpeed?.acceleration || null,
+                      agility: statsData.currentSpeed?.agility || null,
+                      reactionTime:
+                        statsData.currentSpeed?.reactionTime || null,
+                      balance: statsData.currentSpeed?.balance || null,
+                      coordination:
+                        statsData.currentSpeed?.coordination || null,
                     },
                     staminaRecovery: {
-                      vo2Max: 0,
-                      flexibility: 0,
-                      recoveryTime: 0,
+                      vo2Max: statsData.currentStamina?.vo2Max || null,
+                      flexibility:
+                        statsData.currentStamina?.flexibility || null,
+                      recoveryTime:
+                        statsData.currentStamina?.recoveryTime || null,
                     },
-                    injuries: [],
-                  } as StatsFormData, // ✅ Add type assertion
-                });
-
-                console.log("✅ Form data initialized from existing stats");
-              } else {
-                console.log(
-                  "ℹ️ No existing stats found, starting with empty form"
-                );
-                set({ existingStats: null });
-              }
-            } else {
-              console.log("⚠️ Failed to fetch stats, starting with empty form");
-              set({ existingStats: null });
-            }
-
-            set({ isInitializing: false });
-          } catch (error) {
-            console.error("❌ Failed to initialize wizard:", error);
-            set({ isInitializing: false, existingStats: null });
-          }
-        },
-        // Load Existing Stats
-        loadExistingStats: async (userId: string) => {
-          set({ isLoadingStats: true });
-
-          try {
-            console.log("📊 Loading existing stats for user:", userId);
-
-            const response = await fetch(`/api/stats/${userId}`);
-
-            if (response.ok) {
-              const existingStats = await response.json();
-
-              if (existingStats) {
-                console.log("✅ Found existing stats, pre-populating forms");
-
-                // Pre-populate form data with existing stats
-                const populatedFormData: WizardFormData = {
-                  basicMetrics: {
-                    height: existingStats.height,
-                    weight: existingStats.weight,
-                    age: existingStats.age,
-                    bodyFat: existingStats.bodyFat,
-                  },
-                  strengthPower: {
-                    strength: existingStats.strength?.strength || null,
-                    muscleMass: existingStats.strength?.muscleMass || null,
-                    enduranceStrength:
-                      existingStats.strength?.enduranceStrength || null,
-                    explosivePower:
-                      existingStats.strength?.explosivePower || null,
-                  },
-                  speedAgility: {
-                    sprintSpeed: existingStats.speed?.sprintSpeed || null,
-                    acceleration: existingStats.speed?.acceleration || null,
-                    agility: existingStats.speed?.agility || null,
-                    reactionTime: existingStats.speed?.reactionTime || null,
-                    balance: existingStats.speed?.balance || null,
-                    coordination: existingStats.speed?.coordination || null,
-                  },
-                  staminaRecovery: {
-                    vo2Max: existingStats.stamina?.vo2Max || null,
-                    flexibility: existingStats.stamina?.flexibility || null,
-                    recoveryTime: existingStats.stamina?.recoveryTime || null,
-                  },
-                  injuries:
-                    existingStats.injuries?.map((injury: any) => ({
+                    injuries: statsData.activeInjuries.map((injury) => ({
                       id: injury.id,
                       type: injury.type,
                       bodyPart: injury.bodyPart,
@@ -382,32 +603,29 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
                       recoveredAt: injury.recoveredAt?.split("T")[0] || null,
                       status: injury.status,
                       notes: injury.notes || "",
-                    })) || [],
-                };
-
-                set({
-                  existingStats,
-                  formData: populatedFormData,
-                  isLoadingStats: false,
+                    })),
+                  },
                 });
+
+                console.log("✅ Form data initialized from existing stats");
               } else {
-                console.log("📝 No existing stats found, starting fresh");
-                set({ isLoadingStats: false });
+                console.log("ℹ️ No existing stats found");
+                set({ existingStats: null });
               }
-            } else {
-              console.log("📝 No existing stats, starting fresh");
-              set({ isLoadingStats: false });
             }
+
+            set({ isInitializing: false });
           } catch (error) {
-            console.error("❌ Error loading existing stats:", error);
-            set({
-              isLoadingStats: false,
-              submitError: "Failed to load existing stats",
-            });
+            console.error("❌ Failed to initialize wizard:", error);
+            set({ isInitializing: false, existingStats: null });
           }
         },
 
-        // Update Form Section
+        loadExistingStats: async (userId: string) => {
+          // Simplified - handled by initializeWizard
+          console.log("Loading stats for:", userId);
+        },
+
         updateFormSection: (section, data) => {
           console.log(`📝 Updating ${section} section:`, data);
 
@@ -420,37 +638,33 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
               },
             },
             isDraftSaved: false,
-          }));
+          })); // Auto-recalculate if strengthPower section
 
-          // Auto-save after update
+          if (section === "strengthPower") {
+            setTimeout(() => {
+              get().recalculateScores();
+            }, 500);
+          }
+
           setTimeout(() => {
             get().autoSave();
           }, 1000);
-        },
+        }, // Injury Management (unchanged)
 
-        // Injury Management
         updateInjuries: (injuries) => {
           set((state) => ({
-            formData: {
-              ...state.formData,
-              injuries,
-            },
+            formData: { ...state.formData, injuries },
             isDraftSaved: false,
           }));
-
-          setTimeout(() => {
-            get().autoSave();
-          }, 1000);
+          setTimeout(() => get().autoSave(), 1000);
         },
 
         addInjury: () => {
           const state = get();
-          const newInjury = getDefaultInjury();
-
           set({
             formData: {
               ...state.formData,
-              injuries: [...state.formData.injuries, newInjury],
+              injuries: [...state.formData.injuries, getDefaultInjury()],
             },
             isDraftSaved: false,
           });
@@ -458,74 +672,46 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
 
         removeInjury: (index) => {
           const state = get();
-          const updatedInjuries = state.formData.injuries.filter(
-            (_, i) => i !== index
-          );
-
           set({
             formData: {
               ...state.formData,
-              injuries: updatedInjuries,
+              injuries: state.formData.injuries.filter((_, i) => i !== index),
             },
             isDraftSaved: false,
           });
-
-          setTimeout(() => {
-            get().autoSave();
-          }, 500);
+          setTimeout(() => get().autoSave(), 500);
         },
 
         updateInjury: (index, injuryData) => {
           const state = get();
-          const updatedInjuries = state.formData.injuries.map((injury, i) =>
-            i === index ? { ...injury, ...injuryData } : injury
-          );
-
           set({
             formData: {
               ...state.formData,
-              injuries: updatedInjuries,
+              injuries: state.formData.injuries.map((injury, i) =>
+                i === index ? { ...injury, ...injuryData } : injury
+              ),
             },
             isDraftSaved: false,
           });
+          setTimeout(() => get().autoSave(), 1000);
+        }, // Navigation (unchanged)
 
-          setTimeout(() => {
-            get().autoSave();
-          }, 1000);
-        },
-
-        // Navigation & Validation
         validateCurrentStep: () => {
-          const { currentStep, formData, stepSections } = get();
+          const { currentStep, stepSections } = get();
           const stepConfig = stepSections[currentStep];
 
-          // Only validate form steps
-          if (stepConfig.type === "instruction") {
-            return true;
-          }
-
-          // Validation logic will be implemented with Zod schemas
-          // For now, basic validation
-          const isValid = true; // Will be replaced with proper validation
+          if (stepConfig.type === "instruction") return true;
 
           set((state) => ({
-            stepValidation: {
-              ...state.stepValidation,
-              [currentStep]: isValid,
-            },
+            stepValidation: { ...state.stepValidation, [currentStep]: true },
           }));
 
-          return isValid;
+          return true;
         },
 
         navigateToStep: (step) => {
           const { totalSteps } = get();
-
-          if (step < 1 || step > totalSteps) {
-            return false;
-          }
-
-          console.log(`🧭 Navigating to step ${step}`);
+          if (step < 1 || step > totalSteps) return false;
           set({ currentStep: step });
           return true;
         },
@@ -537,56 +723,38 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
             validateCurrentStep,
             markStepComplete,
           } = get();
-
-          if (!validateCurrentStep()) {
-            console.log("❌ Validation failed, cannot proceed");
-            return false;
-          }
-
+          if (!validateCurrentStep()) return false;
           markStepComplete(currentStep);
-
           if (currentStep < totalSteps) {
             set({ currentStep: currentStep + 1 });
             return true;
           }
-
           return false;
         },
 
         previousStep: () => {
           const { currentStep } = get();
-
-          if (currentStep > 1) {
-            set({ currentStep: currentStep - 1 });
-          }
+          if (currentStep > 1) set({ currentStep: currentStep - 1 });
         },
 
         markStepComplete: (step) => {
           set((state) => ({
             completedSteps: new Set([...state.completedSteps, step]),
           }));
-        },
+        }, // Auto-save (unchanged)
 
-        // Auto-save & Draft Management
         autoSave: async () => {
           const { isAutoSaving, athlete, formData } = get();
-
           if (isAutoSaving || !athlete) return;
 
           set({ isAutoSaving: true });
 
           try {
-            // Save to localStorage as backup
             localStorage.setItem(
               `stats-draft-${athlete.id}`,
-              JSON.stringify({
-                formData,
-                savedAt: new Date().toISOString(),
-              })
+              JSON.stringify({ formData, savedAt: new Date().toISOString() })
             );
-
             console.log("💾 Auto-saved draft locally");
-
             set({
               isDraftSaved: true,
               lastSavedAt: new Date(),
@@ -600,7 +768,6 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
 
         saveDraft: async () => {
           const { athlete, formData } = get();
-
           if (!athlete) return false;
 
           try {
@@ -612,10 +779,7 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
 
             if (response.ok) {
               console.log("✅ Draft saved to server");
-              set({
-                isDraftSaved: true,
-                lastSavedAt: new Date(),
-              });
+              set({ isDraftSaved: true, lastSavedAt: new Date() });
               return true;
             }
             return false;
@@ -623,21 +787,13 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
             console.error("❌ Draft save failed:", error);
             return false;
           }
-        },
+        }, // Final Submission (unchanged)
 
-        // Final Submission
-        // Update the submitStats method in your StatsWizardStore:
-
-        // Make sure your submitStats method looks like this:
         submitStats: async () => {
           const { athlete, formData, existingStats } = get();
+          if (!athlete) return false;
 
-          if (!athlete) {
-            console.log("❌ No athlete found for submission");
-            return false;
-          }
-
-          console.log("🚀 Starting stats submission for:", athlete.firstName);
+          console.log("🚀 Starting stats submission");
           set({ isSubmitting: true, submitError: null });
 
           try {
@@ -647,34 +803,23 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
               isUpdate: !!existingStats,
             };
 
-            console.log(
-              "📤 Submitting payload with keys:",
-              Object.keys(payload)
-            );
-
             const response = await fetch(`/api/stats/${athlete.id}`, {
               method: existingStats ? "PUT" : "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             });
 
-            console.log("📡 API Response status:", response.status);
-
             if (response.ok) {
-              const result = await response.json();
-              console.log("✅ Submission successful:", result.message);
-
+              console.log("✅ Submission successful");
               set({
                 isSubmitting: false,
                 isDraftSaved: true,
                 lastSavedAt: new Date(),
                 submitError: null,
               });
-
               return true;
             } else {
               const error = await response.json();
-              console.log("❌ Submission failed:", error);
               set({
                 isSubmitting: false,
                 submitError: error.message || "Submission failed",
@@ -683,15 +828,11 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
             }
           } catch (error) {
             console.error("❌ Submission error:", error);
-            set({
-              isSubmitting: false,
-              submitError: "Network error occurred",
-            });
+            set({ isSubmitting: false, submitError: "Network error occurred" });
             return false;
           }
         },
 
-        // Utility Actions
         resetWizard: () => {
           set({
             athlete: null,
@@ -707,25 +848,18 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
           });
         },
 
-        setError: (error) => {
-          set({ submitError: error });
-        },
-
-        clearError: () => {
-          set({ submitError: null });
-        },
+        setError: (error) => set({ submitError: error }),
+        clearError: () => set({ submitError: null }),
       }),
       {
         name: "stats-wizard-storage",
         partialize: (state) => ({
-          // Only persist form data and basic state
           formData: state.formData,
           currentStep: state.currentStep,
-          completedSteps: Array.from(state.completedSteps), // Convert Set to Array for persistence
+          completedSteps: Array.from(state.completedSteps),
           athlete: state.athlete,
         }),
         onRehydrateStorage: () => (state) => {
-          // Convert completedSteps back to Set after rehydration
           if (state && Array.isArray(state.completedSteps)) {
             state.completedSteps = new Set(state.completedSteps);
           }

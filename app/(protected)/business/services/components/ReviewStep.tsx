@@ -47,13 +47,9 @@ export const ReviewStep: React.FC<{ formData: ModeratorFormData }> = ({
 
       <div className="bg-gray-50 p-4 rounded-md">
         <h3 className="font-semibold text-gray-900 mb-2">Documents</h3>
-        <ul className="text-gray-700 space-y-1">
-          {formData.documents.map((doc, index) => (
-            <li key={index}>
-              • {doc.name} {doc.type} {doc.size}
-            </li>
-          ))}
-        </ul>
+       
+         doc: info
+    
       </div>
 
       <div className="p-4 bg-green-50 border border-green-200 rounded-md">

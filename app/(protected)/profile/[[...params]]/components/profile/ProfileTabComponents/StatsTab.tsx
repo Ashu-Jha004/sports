@@ -28,7 +28,7 @@ export const StatsTab = () => {
     setRequestDialogOpen,
     clearErrors,
   } = useStatsStore();
-
+  console.log("user stats", userStats);
   const {
     location,
     loading: locationLoading,

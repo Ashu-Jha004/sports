@@ -290,22 +290,22 @@ model SpeedAndAgility {
   stats          Stats    @relation("SpeedAndAgilityRelation", fields: [statId], references: [id], onDelete: Cascade)
   sprintSpeed    Float
   //updated field names to be more descriptive
-  Ten_Meter_Sprint            Float?
-  Fourty_Meter_Dash           Float?
-  Repeated_Sprint_Ability     Float?
-  Five_0_Five_Agility_Test    Float?
-  T_Test                      Float?
-  Illinois_Agility_Test       Float?
-  Visual_Reaction_Speed_Drill Float?
-  Long_Jump                   Float?
-  Reactive_Agility_T_Test     Float?
-  Standing_Long_Jump          Float?
+  Ten_Meter_Sprint            Json?
+  Fourty_Meter_Dash           Json?
+  Repeated_Sprint_Ability     Json?
+  Five_0_Five_Agility_Test    Json?
+  T_Test                      Json?
+  Illinois_Agility_Test       Json?
+  Visual_Reaction_Speed_Drill Json?
+  Long_Jump                   Json?
+  Reactive_Agility_T_Test     Json?
+  Standing_Long_Jump          Json?
 
-  acceleration   Float
-  agility        Float
-  reactionTime   Float
-  balance        Float
-  coordination   Float
+  acceleration   Json?
+  agility        Json?
+  reactionTime   Json?
+  balance        Json?
+  coordination   Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   @@index([statId,createdAt,updatedAt])
@@ -313,30 +313,69 @@ model SpeedAndAgility {
 
 // Strength and power performance metrics
 model StrengthAndPower {
-  id                  String   @id @default(uuid())
-  statId              String
-  stats               Stats    @relation("StrengthAndPowerRelation", fields: [statId], references: [id], onDelete: Cascade)
-  strength            Float
-  //updated field names to be more descriptive
-  Countermovement_Jump  Json?
-  Loaded_Squat_Jump     Json?
-  Depth_Jump            Json?
-  Ballistic_Bench_Press Json?
-  Push_Up               Json?
-  Ballistic_Push_Up     Json?
-  Deadlift_Velocity     Json?
-  Barbell_Hip_Thrust    Json?
-  Weighted_Pull_up      Json?
-  Barbell_Row           Json?
-  Plank_Hold            Float?  
-  pullUps              Json?
-  muscleMass          Float
-  enduranceStrength   Float
-  explosivePower      Float
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  @@index([statId,createdAt,updatedAt])
+  id                    String   @id @default(uuid())
+  statId                String
+  stats                 Stats    @relation("StrengthAndPowerRelation", fields: [statId], references: [id], onDelete: Cascade)
+  
+  // Test metadata
+  testDate              DateTime? @default(now())
+  athleteBodyWeight     Float    // kg - needed for calculations
+  
+  // ============================================
+  // JUMP TESTS (JSON - stores full test data with attempts)
+  // ============================================
+  Countermovement_Jump  Json?    // CountermovementJumpTest
+  Loaded_Squat_Jump     Json?    // LoadedSquatJumpTest
+  Depth_Jump            Json?    // DepthJumpTest
+  
+  // ============================================
+  // UPPER BODY POWER TESTS (JSON)
+  // ============================================
+  Ballistic_Bench_Press Json?    // BallisticBenchPressTest
+  Push_Up               Json?    // PushUpTest
+  Ballistic_Push_Up     Json?    // BallisticPushUpTest
+  
+  // ============================================
+  // LOWER BODY STRENGTH TESTS (JSON)
+  // ============================================
+  Deadlift_Velocity     Json?    // DeadliftVelocityTest
+  Barbell_Hip_Thrust    Json?    // BarbellHipThrustTest
+  
+  // ============================================
+  // UPPER BODY STRENGTH TESTS (JSON)
+  // ============================================
+  Weighted_Pull_up      Json?    // WeightedPullUpTest
+  Barbell_Row           Json?    // BarbellRowTest
+  
+  // ============================================
+  // ENDURANCE/STABILITY TESTS (JSON)
+  // ============================================
+  Plank_Hold            Json?    // PlankHoldTest
+  pullUps               Json?    // PullUpsTest (bodyweight)
+  
+  // ============================================
+  // LEGACY FIELD (backward compatibility)
+  // ============================================
+  Pushups               Int?     // Simple count for backward compatibility
+  
+  // ============================================
+  // CALCULATED SCORES (0-100 scale)
+  // ============================================
+  muscleMass            Float    @default(0)
+  enduranceStrength     Float    @default(0)
+  explosivePower        Float    @default(0)
+  
+  // ============================================
+  // METADATA
+  // ============================================
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([statId, createdAt, updatedAt])
+  @@index([testDate])
+  @@map("strength_and_power")
 }
+
 
 // Complete audit trail of statistics changes
 model StatsHistory {

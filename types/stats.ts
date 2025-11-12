@@ -10,7 +10,7 @@ export interface BasicMetrics {
 }
 
 export interface StrengthPowerForm {
-  strength: number | null;
+  Pushups: number | null;
   muscleMass: number | null;
   enduranceStrength: number | null;
   explosivePower: number | null;
