@@ -10,18 +10,8 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await currentUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
-    // FIX: Await params in Next.js 15
+    // Await params as Next.js expects
     const { username } = await params;
-
     if (!username) {
       return NextResponse.json(
         { success: false, error: "Username is required" },
@@ -29,27 +19,24 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    console.log(`👤 Fetching profile for username: ${username}`);
-    // Find user by username with all related data
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    // Fetch target user with selected relations and counts
     const targetUser = await prisma.user.findUnique({
       where: {
-        username: username,
+        username,
         deletedAt: null,
       },
       include: {
-        profile: {
-          include: {
-            location: true,
-          },
-        },
-        counters: true, // Include user counters
-        _count: {
-          select: {
-            followers: true,
-            following: true,
-            // posts: true, // Uncomment when Post model is ready
-          },
-        },
+        profile: { include: { location: true } },
+        counters: true,
+        _count: { select: { followers: true, following: true } },
       },
     });
 
@@ -60,7 +47,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Get current user's data to check relationship
+    // Fetch current user by clerkId
     const currentUserData = await prisma.user.findUnique({
       where: { clerkId: user.id },
     });
@@ -72,17 +59,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Check if this is the user's own profile
     const isOwnProfile = currentUserData.id === targetUser.id;
 
-    // Check friendship status if not own profile
     let friendshipStatus = "none";
     let isFollowing = false;
     let isFollowedBy = false;
 
     if (!isOwnProfile) {
       const [followingRelation, followerRelation] = await Promise.all([
-        // Am I following them?
         prisma.follow.findUnique({
           where: {
             followerId_followingId: {
@@ -91,7 +75,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             },
           },
         }),
-        // Are they following me?
         prisma.follow.findUnique({
           where: {
             followerId_followingId: {
@@ -114,23 +97,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
     }
 
-    // Prepare response data
     const profileData = {
       id: targetUser.id,
       username: targetUser.username,
       firstName: targetUser.firstName,
       lastName: targetUser.lastName,
       profileImageUrl: targetUser.profileImageUrl,
-      bio: targetUser.profile?.bio,
-      avatarUrl: targetUser.profile?.avatarUrl,
+      bio: targetUser.profile?.bio ?? null,
+      avatarUrl: targetUser.profile?.avatarUrl ?? null,
 
-      // Athletic info
       primarySport: targetUser.PrimarySport,
       rank: targetUser.Rank,
       class: targetUser.Class,
       role: targetUser.role,
 
-      // Location info
       city: targetUser.city,
       state: targetUser.state,
       country: targetUser.country,
@@ -144,46 +124,37 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           }
         : null,
 
-      // Personal info (conditional based on privacy/friendship)
       dateOfBirth: isOwnProfile ? targetUser.dateOfBirth : null,
       gender: targetUser.gender,
       email: isOwnProfile ? targetUser.email : null,
 
-      // Social counts - prioritize UserCounters, fallback to _count
       followersCount:
         targetUser.counters?.followersCount ?? targetUser._count.followers,
       followingCount:
         targetUser.counters?.followingCount ?? targetUser._count.following,
-      postsCount: targetUser.counters?.postsCount ?? 0, // Will be real count when Post model is ready
+      postsCount: targetUser.counters?.postsCount ?? 0,
 
-      // Metadata
       createdAt: targetUser.createdAt,
       updatedAt: targetUser.updatedAt,
 
-      // Relationship info
       isOwnProfile,
       friendshipStatus,
       isFollowing,
       isFollowedBy,
 
-      // Additional social info for own profile or friends
       showDetailedStats: isOwnProfile || friendshipStatus === "mutual",
     };
 
-    console.log(`✅ Profile data fetched for ${username}`, {
-      followersCount: profileData.followersCount,
-      followingCount: profileData.followingCount,
-      friendshipStatus: profileData.friendshipStatus,
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: profileData,
-    });
+    return NextResponse.json({ success: true, data: profileData });
   } catch (error) {
+    // Log full error for debugging
     console.error("Profile fetch error:", error);
+
+    const message =
+      error instanceof Error ? error.message : "Failed to fetch profile";
+
     return NextResponse.json(
-      { success: false, error: "Failed to fetch profile" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
