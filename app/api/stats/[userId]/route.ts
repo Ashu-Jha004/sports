@@ -16,7 +16,7 @@ async function checkModeratorAccess(clerkUserId: string) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const clerkUserId = (await auth()).userId;
@@ -43,7 +43,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const clerkUserId = (await auth()).userId;
@@ -106,7 +106,7 @@ export async function POST(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const clerkUserId = (await auth()).userId;
