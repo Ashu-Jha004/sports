@@ -282,12 +282,12 @@ export function formatErrorResponse(error: unknown): NextResponse {
 export function withErrorHandler(
   handler: (
     request: NextRequest,
-    context: { params: { userId: string } }
+    context: { params: Promise<{ userId: string }> }
   ) => Promise<NextResponse>
 ) {
   return async (
     request: NextRequest,
-    context: { params: { userId: string } }
+    context: { params: Promise<{ userId: string }> }
   ): Promise<NextResponse> => {
     try {
       return await handler(request, context);
