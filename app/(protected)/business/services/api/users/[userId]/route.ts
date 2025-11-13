@@ -4,17 +4,26 @@ import { auth } from "@clerk/nextjs/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
-) {
+  context: { params: Promise<{ userId: string }> }
+): Promise<NextResponse> {
   try {
+    // Authenticate the request
     const { userId: clerkUserId } = await auth();
     if (!clerkUserId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { userId } = await params;
+    // Await params promise as required by Next.js
+    const { userId } = await context.params;
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Missing userId parameter" },
+        { status: 400 }
+      );
+    }
     console.log("🔍 API: Fetching user:", userId);
 
+    // Fetch user with minimal required fields for efficiency
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -38,7 +47,7 @@ export async function GET(
     }
 
     console.log("✅ API: User found:", user.firstName);
-    return NextResponse.json(user);
+    return NextResponse.json({ success: true, user });
   } catch (error) {
     console.error("❌ API Error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
