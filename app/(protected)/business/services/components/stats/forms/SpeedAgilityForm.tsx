@@ -1,52 +1,35 @@
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import React, { useEffect, useMemo } from "react";
+import { useStatsWizardStore } from "@/store/statsWizardStore";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   ArrowLeft,
   ArrowRight,
-  Zap,
-  Target,
-  Timer,
-  Activity,
   AlertCircle,
-  Gauge,
+  Zap,
+  Activity,
 } from "lucide-react";
-import { useStatsWizardStore } from "@/store/statsWizardStore";
-// Validation Schema
-const speedAgilitySchema = z.object({
-  sprintSpeed: z
-    .number()
-    .min(0, "Sprint speed cannot be negative")
-    .max(100, "Sprint speed cannot exceed 100"),
-  acceleration: z
-    .number()
-    .min(0, "Acceleration cannot be negative")
-    .max(100, "Acceleration cannot exceed 100"),
-  agility: z
-    .number()
-    .min(0, "Agility score cannot be negative")
-    .max(100, "Agility score cannot exceed 100"),
-  reactionTime: z
-    .number()
-    .min(0, "Reaction time cannot be negative")
-    .max(100, "Reaction time cannot exceed 100"),
-  balance: z
-    .number()
-    .min(0, "Balance score cannot be negative")
-    .max(100, "Balance score cannot exceed 100"),
-  coordination: z
-    .number()
-    .min(0, "Coordination score cannot be negative")
-    .max(100, "Coordination score cannot exceed 100"),
-});
+import { SpeedAndAgilityData } from "@/lib/stats/types/speedAgilityTests";
+import { recalculateAllScores } from "@/lib/stats/helpers/speedAgilityCalculations";
 
-type SpeedAgilityFormData = z.infer<typeof speedAgilitySchema>;
+// Import all test components
+import { TenMeterSprintInput } from "./components/speedAgilityTest/TenMeterSprintInput";
+import { FourtyMeterDashInput } from "./components/speedAgilityTest/FourtyMeterDashInput";
+import { RepeatedSprintAbilityInput } from "./components/speedAgilityTest/RepeatedSprintAbilityInput";
+import { TTestInput } from "./components/speedAgilityTest/TTestInput";
+import { IllinoisAgilityTestInput } from "./components/speedAgilityTest/IllinoisAgilityTestInput";
+import { Five05AgilityTestInput } from "./components/speedAgilityTest/Five05AgilityTestInput";
+import { VisualReactionSpeedDrillInput } from "./components/speedAgilityTest/VisualReactionSpeedDrillInput";
+import { StandingLongJumpInput } from "./components/speedAgilityTest/StandingLongJumpInput";
+import { LongJumpInput } from "./components/speedAgilityTest/LongJumpInput";
+import { ReactiveAgilityTTestInput } from "./components/speedAgilityTest/ReactiveAgilityTTestInput";
 
 interface SpeedAgilityFormProps {
   onNext: () => void;
@@ -58,336 +41,313 @@ export const SpeedAgilityForm: React.FC<SpeedAgilityFormProps> = ({
   onPrevious,
 }) => {
   const { formData, updateFormSection } = useStatsWizardStore();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const speedAgilityData =
+    formData.speedAgility as unknown as SpeedAndAgilityData;
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isValid },
-    watch,
-  } = useForm<SpeedAgilityFormData>({
-    resolver: zodResolver(speedAgilitySchema),
-    mode: "onChange",
-    defaultValues: {
-      sprintSpeed: formData.speedAgility.sprintSpeed || undefined,
-      acceleration: formData.speedAgility.acceleration || undefined,
-      agility: formData.speedAgility.agility || undefined,
-      reactionTime: formData.speedAgility.reactionTime || undefined,
-      balance: formData.speedAgility.balance || undefined,
-      coordination: formData.speedAgility.coordination || undefined,
-    },
-  });
-
-  const watchedValues = watch();
-
-  // Auto-save on form changes
+  // Recalculate scores whenever test data changes
   useEffect(() => {
-    const subscription = watch((value) => {
-      const cleanData = Object.entries(value).reduce((acc, [key, val]) => {
-        if (val !== undefined && val !== null) {
-          acc[key] = typeof val === "string" ? parseFloat(val) : val;
-        }
-        return acc;
-      }, {} as any);
+    const recalculated = recalculateAllScores(speedAgilityData);
 
-      if (Object.keys(cleanData).length > 0) {
-        updateFormSection("speedAgility", cleanData);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [watch, updateFormSection]);
-
-  const onSubmit = async (data: SpeedAgilityFormData) => {
-    setIsSubmitting(true);
-
-    try {
-      updateFormSection("speedAgility", data);
-      onNext();
-    } catch (error) {
-      console.error("Error submitting speed agility data:", error);
-    } finally {
-      setIsSubmitting(false);
+    // Only update if scores actually changed
+    if (
+      recalculated.sprintSpeed !== speedAgilityData.sprintSpeed ||
+      recalculated.acceleration?.score !== speedAgilityData.acceleration?.score
+    ) {
+      updateFormSection("speedAgility", recalculated);
     }
+  }, [
+    speedAgilityData.Ten_Meter_Sprint,
+    speedAgilityData.Fourty_Meter_Dash,
+    speedAgilityData.Repeated_Sprint_Ability,
+    speedAgilityData.T_Test,
+    speedAgilityData.Illinois_Agility_Test,
+    speedAgilityData.Five_0_Five_Agility_Test,
+    speedAgilityData.Visual_Reaction_Speed_Drill,
+    speedAgilityData.Standing_Long_Jump,
+    speedAgilityData.Long_Jump,
+    speedAgilityData.Reactive_Agility_T_Test,
+  ]);
+
+  const handleTestChange = (
+    testName: keyof SpeedAndAgilityData,
+    testData: any
+  ) => {
+    updateFormSection("speedAgility", {
+      ...speedAgilityData,
+      [testName]: testData,
+    });
   };
 
+  const handleAnthropometricChange = (data: any) => {
+    updateFormSection("speedAgility", {
+      ...speedAgilityData,
+      anthropometricData: data,
+    });
+  };
+
+  // ADD THIS FUNCTION HERE:
+  const getCompletedTestCount = (): number => {
+    let count = 0;
+
+    // Tests with attempts array
+    if (speedAgilityData.Ten_Meter_Sprint?.attempts?.length) count++;
+    if (speedAgilityData.Fourty_Meter_Dash?.attempts?.length) count++;
+    if (speedAgilityData.T_Test?.attempts?.length) count++;
+    if (speedAgilityData.Illinois_Agility_Test?.attempts?.length) count++;
+    if (speedAgilityData.Five_0_Five_Agility_Test?.attempts?.length) count++;
+    if (speedAgilityData.Visual_Reaction_Speed_Drill?.attempts?.length) count++;
+    if (speedAgilityData.Standing_Long_Jump?.attempts?.length) count++;
+    if (speedAgilityData.Long_Jump?.attempts?.length) count++;
+    if (speedAgilityData.Reactive_Agility_T_Test?.attempts?.length) count++;
+
+    // RSA test with sprintTimes array
+    if (speedAgilityData.Repeated_Sprint_Ability?.sprintTimes?.length === 6)
+      count++;
+
+    return count;
+  };
+
+  // Check if at least one test is completed
+  const hasAtLeastOneTest = useMemo(() => {
+    return !!(
+      speedAgilityData.Ten_Meter_Sprint?.attempts?.length ||
+      speedAgilityData.Fourty_Meter_Dash?.attempts?.length ||
+      speedAgilityData.Repeated_Sprint_Ability?.sprintTimes?.length ||
+      speedAgilityData.T_Test?.attempts?.length ||
+      speedAgilityData.Illinois_Agility_Test?.attempts?.length ||
+      speedAgilityData.Five_0_Five_Agility_Test?.attempts?.length ||
+      speedAgilityData.Visual_Reaction_Speed_Drill?.attempts?.length ||
+      speedAgilityData.Standing_Long_Jump?.attempts?.length ||
+      speedAgilityData.Long_Jump?.attempts?.length ||
+      speedAgilityData.Reactive_Agility_T_Test?.attempts?.length
+    );
+  }, [speedAgilityData]);
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form
+      className="space-y-6"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (hasAtLeastOneTest) {
+          onNext();
+        }
+      }}
+    >
       {/* Header */}
       <div className="text-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">
           Speed & Agility Assessment
         </h2>
         <p className="text-gray-600">
-          Record speed, agility, and coordination test results
+          Complete the tests relevant to your athlete's sport and training
+          goals.
+          <br />
+          <span className="text-sm text-amber-600">
+            At least one test is required to continue.
+          </span>
         </p>
       </div>
 
-      {/* Scoring Guidelines */}
-      <Card className="bg-amber-50 border-amber-200">
-        <CardHeader>
-          <CardTitle className="text-base text-amber-900">
-            📊 Scoring Guidelines (0-100 scale)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-amber-800">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p>
-                <strong>Sprint Speed:</strong> 40m time (lower = higher score)
-              </p>
-              <p>
-                <strong>Acceleration:</strong> 10m time (lower = higher score)
-              </p>
-              <p>
-                <strong>Agility:</strong> T-drill time (lower = higher score)
-              </p>
-            </div>
-            <div>
-              <p>
-                <strong>Reaction Time:</strong> Response speed (lower = higher
-                score)
-              </p>
-              <p>
-                <strong>Balance:</strong> Single-leg stand duration
-              </p>
-              <p>
-                <strong>Coordination:</strong> Ball catch success rate
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Form Fields Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Sprint Speed */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center">
-              <Zap className="w-4 h-4 mr-2 text-indigo-600" />
-              Sprint Speed
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="sprintSpeed">Speed Score (0-100)</Label>
-              <Input
-                id="sprintSpeed"
-                type="number"
-                step="0.1"
-                placeholder="0.0"
-                {...register("sprintSpeed", { valueAsNumber: true })}
-                className={errors.sprintSpeed ? "border-red-300" : ""}
-              />
-              {errors.sprintSpeed && (
-                <p className="text-sm text-red-600">
-                  {errors.sprintSpeed.message}
-                </p>
-              )}
-              <p className="text-xs text-gray-500">
-                Based on 40-meter sprint time
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Acceleration */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center">
-              <Gauge className="w-4 h-4 mr-2 text-indigo-600" />
-              Acceleration
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="acceleration">Acceleration Score (0-100)</Label>
-              <Input
-                id="acceleration"
-                type="number"
-                step="0.1"
-                placeholder="0.0"
-                {...register("acceleration", { valueAsNumber: true })}
-                className={errors.acceleration ? "border-red-300" : ""}
-              />
-              {errors.acceleration && (
-                <p className="text-sm text-red-600">
-                  {errors.acceleration.message}
-                </p>
-              )}
-              <p className="text-xs text-gray-500">
-                Based on 10-meter sprint time
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Agility */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center">
-              <Target className="w-4 h-4 mr-2 text-indigo-600" />
-              Agility
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="agility">Agility Score (0-100)</Label>
-              <Input
-                id="agility"
-                type="number"
-                step="0.1"
-                placeholder="0.0"
-                {...register("agility", { valueAsNumber: true })}
-                className={errors.agility ? "border-red-300" : ""}
-              />
-              {errors.agility && (
-                <p className="text-sm text-red-600">{errors.agility.message}</p>
-              )}
-              <p className="text-xs text-gray-500">
-                Based on T-drill performance
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Reaction Time */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center">
-              <Timer className="w-4 h-4 mr-2 text-indigo-600" />
-              Reaction Time
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="reactionTime">Reaction Score (0-100)</Label>
-              <Input
-                id="reactionTime"
-                type="number"
-                step="0.1"
-                placeholder="0.0"
-                {...register("reactionTime", { valueAsNumber: true })}
-                className={errors.reactionTime ? "border-red-300" : ""}
-              />
-              {errors.reactionTime && (
-                <p className="text-sm text-red-600">
-                  {errors.reactionTime.message}
-                </p>
-              )}
-              <p className="text-xs text-gray-500">
-                Based on visual/audio response test
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Balance */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center">
-              <Activity className="w-4 h-4 mr-2 text-indigo-600" />
-              Balance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="balance">Balance Score (0-100)</Label>
-              <Input
-                id="balance"
-                type="number"
-                step="0.1"
-                placeholder="0.0"
-                {...register("balance", { valueAsNumber: true })}
-                className={errors.balance ? "border-red-300" : ""}
-              />
-              {errors.balance && (
-                <p className="text-sm text-red-600">{errors.balance.message}</p>
-              )}
-              <p className="text-xs text-gray-500">
-                Based on single-leg stand duration
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Coordination */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center">
-              <Target className="w-4 h-4 mr-2 text-indigo-600" />
-              Coordination
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="coordination">Coordination Score (0-100)</Label>
-              <Input
-                id="coordination"
-                type="number"
-                step="0.1"
-                placeholder="0.0"
-                {...register("coordination", { valueAsNumber: true })}
-                className={errors.coordination ? "border-red-300" : ""}
-              />
-              {errors.coordination && (
-                <p className="text-sm text-red-600">
-                  {errors.coordination.message}
-                </p>
-              )}
-              <p className="text-xs text-gray-500">
-                Based on ball catch success rate
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Overall Score Display */}
-      {Object.values(watchedValues).every(
-        (val) => val !== undefined && val !== null
-      ) && (
-        <Card className="bg-green-50 border-green-200">
+      {/* Overall Scores Summary */}
+      {hasAtLeastOneTest && (
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm font-medium text-green-900">
-                  Overall Speed & Agility Score
+                <p className="text-sm font-medium text-blue-900">
+                  Overall Speed & Agility Scores
                 </p>
-                <p className="text-xs text-green-700">
-                  Average of all speed and agility components
+                <p className="text-xs text-blue-700">
+                  Calculated from completed tests
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-green-900">
-                  {(
-                    Object.values(watchedValues).reduce(
-                      (sum, val) => sum + (val || 0),
-                      0
-                    ) / 6
-                  ).toFixed(1)}
+              <Activity className="w-6 h-6 text-blue-600" />
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <p className="text-xs text-gray-600">Sprint Speed</p>
+                <p className="text-2xl font-bold text-blue-900">
+                  {speedAgilityData.sprintSpeed?.toFixed(1) || 0}
+                  <span className="text-sm text-gray-600">/100</span>
                 </p>
-                <p className="text-xs text-green-700">out of 100</p>
+              </div>
+
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <p className="text-xs text-gray-600">Acceleration</p>
+                <p className="text-2xl font-bold text-blue-900">
+                  {speedAgilityData.acceleration?.score?.toFixed(1) || 0}
+                  <span className="text-sm text-gray-600">/100</span>
+                </p>
+              </div>
+
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <p className="text-xs text-gray-600">Agility</p>
+                <p className="text-2xl font-bold text-green-900">
+                  {speedAgilityData.agility?.score?.toFixed(1) || 0}
+                  <span className="text-sm text-gray-600">/100</span>
+                </p>
+              </div>
+
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <p className="text-xs text-gray-600">Reaction Time</p>
+                <p className="text-2xl font-bold text-amber-900">
+                  {speedAgilityData.reactionTime?.score?.toFixed(1) || 0}
+                  <span className="text-sm text-gray-600">/100</span>
+                </p>
+              </div>
+
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <p className="text-xs text-gray-600">Coordination</p>
+                <p className="text-2xl font-bold text-teal-900">
+                  {speedAgilityData.coordination?.score?.toFixed(1) || 0}
+                  <span className="text-sm text-gray-600">/100</span>
+                </p>
+              </div>
+
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <p className="text-xs text-gray-600">Balance</p>
+                <p className="text-2xl font-bold text-purple-900">
+                  {speedAgilityData.balance?.score?.toFixed(1) || 0}
+                  <span className="text-sm text-gray-600">/100</span>
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Validation Summary */}
-      {Object.keys(errors).length > 0 && (
+      {/* Test Categories - Accordion Layout */}
+      <Accordion
+        type="multiple"
+        className="space-y-4"
+        defaultValue={["sprint"]}
+      >
+        {/* Sprint & Acceleration Tests */}
+        <AccordionItem value="sprint" className="border rounded-lg">
+          <AccordionTrigger className="px-4 hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-blue-600" />
+              <span className="font-semibold">Sprint & Acceleration Tests</span>
+              <span className="text-xs text-gray-500 ml-2">
+                (3 tests available)
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            <TenMeterSprintInput
+              value={speedAgilityData.Ten_Meter_Sprint}
+              onChange={(data) => handleTestChange("Ten_Meter_Sprint", data)}
+              anthropometricData={speedAgilityData.anthropometricData}
+              onAnthropometricChange={handleAnthropometricChange}
+            />
+
+            <FourtyMeterDashInput
+              value={speedAgilityData.Fourty_Meter_Dash}
+              onChange={(data) => handleTestChange("Fourty_Meter_Dash", data)}
+            />
+
+            <RepeatedSprintAbilityInput
+              value={speedAgilityData.Repeated_Sprint_Ability}
+              onChange={(data) =>
+                handleTestChange("Repeated_Sprint_Ability", data)
+              }
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Agility & Change of Direction Tests */}
+        <AccordionItem value="agility" className="border rounded-lg">
+          <AccordionTrigger className="px-4 hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-green-600" />
+              <span className="font-semibold">
+                Agility & Change of Direction
+              </span>
+              <span className="text-xs text-gray-500 ml-2">
+                (3 tests available)
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            <TTestInput
+              value={speedAgilityData.T_Test}
+              onChange={(data) => handleTestChange("T_Test", data)}
+            />
+
+            <IllinoisAgilityTestInput
+              value={speedAgilityData.Illinois_Agility_Test}
+              onChange={(data) =>
+                handleTestChange("Illinois_Agility_Test", data)
+              }
+            />
+
+            <Five05AgilityTestInput
+              value={speedAgilityData.Five_0_Five_Agility_Test}
+              onChange={(data) =>
+                handleTestChange("Five_0_Five_Agility_Test", data)
+              }
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Power Tests */}
+        <AccordionItem value="power" className="border rounded-lg">
+          <AccordionTrigger className="px-4 hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-orange-600" />
+              <span className="font-semibold">Explosive Power Tests</span>
+              <span className="text-xs text-gray-500 ml-2">(Optional)</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            <StandingLongJumpInput
+              value={speedAgilityData.Standing_Long_Jump}
+              onChange={(data) => handleTestChange("Standing_Long_Jump", data)}
+            />
+
+            <LongJumpInput
+              value={speedAgilityData.Long_Jump}
+              onChange={(data) => handleTestChange("Long_Jump", data)}
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Advanced/Optional Tests */}
+        <AccordionItem value="advanced" className="border rounded-lg">
+          <AccordionTrigger className="px-4 hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-violet-600" />
+              <span className="font-semibold">Advanced & Optional Tests</span>
+              <span className="text-xs text-gray-500 ml-2">
+                (2 tests available)
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            <VisualReactionSpeedDrillInput
+              value={speedAgilityData.Visual_Reaction_Speed_Drill}
+              onChange={(data) =>
+                handleTestChange("Visual_Reaction_Speed_Drill", data)
+              }
+            />
+
+            <ReactiveAgilityTTestInput
+              value={speedAgilityData.Reactive_Agility_T_Test}
+              onChange={(data) =>
+                handleTestChange("Reactive_Agility_T_Test", data)
+              }
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      {/* Validation Message */}
+      {!hasAtLeastOneTest && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Please correct the following errors:
-            <ul className="mt-2 list-disc list-inside">
-              {Object.entries(errors).map(([field, error]) => (
-                <li key={field} className="text-sm">
-                  {error?.message}
-                </li>
-              ))}
-            </ul>
+            Please complete at least one speed or agility test to continue.
           </AlertDescription>
         </Alert>
       )}
@@ -401,14 +361,14 @@ export const SpeedAgilityForm: React.FC<SpeedAgilityFormProps> = ({
 
         <div className="text-center">
           <p className="text-sm text-gray-600">
-            {isValid
-              ? "✅ All speed assessments completed"
-              : "Complete all assessments to continue"}
+            {hasAtLeastOneTest
+              ? `✅ ${getCompletedTestCount()} test(s) completed`
+              : "Complete at least one test to continue"}
           </p>
         </div>
 
-        <Button type="submit" disabled={!isValid || isSubmitting}>
-          {isSubmitting ? "Saving..." : "Next Step"}
+        <Button type="submit" disabled={!hasAtLeastOneTest}>
+          Next Step
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>

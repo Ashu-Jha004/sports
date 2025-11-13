@@ -262,22 +262,22 @@ model StaminaAndRecovery {
   statId       String
   stats        Stats    @relation("StaminaAndRecoveryRelation", fields: [statId], references: [id], onDelete: Cascade)
   vo2Max       Float
-flexibility    Float?
+flexibility    Json?
   //updated field names to be more descriptive
-  Beep_Test        Float?
-  Yo_Yo_Test      Float?
-  Cooper_Test     Float?
-  Peak_Heart_Rate Float?
-  Resting_Heart_Rate Float?
-  Resting_Heart_Rate_Variability Float?
-  Lactate_Threshold Float?
-  Anaerobic_Capacity Float?
-  Post_Exercise_Heart_Rate_Recovery Float?
-  Sit_and_Reach_Test Float?
-  Active_Straight_Leg_Raise Float?
-  Shoulder_External_Internal_Rotation Float?
-Knee_to_Wall_Test Float?
-  recoveryTime Float
+  Beep_Test        Json?
+  Yo_Yo_Test      Json?
+  Cooper_Test     Json?
+  Peak_Heart_Rate Json?
+  Resting_Heart_Rate Json?
+  Resting_Heart_Rate_Variability Json?
+  Lactate_Threshold Json?
+  Anaerobic_Capacity Json?
+  Post_Exercise_Heart_Rate_Recovery Json?
+  Sit_and_Reach_Test Json?
+  Active_Straight_Leg_Raise Json?
+  Shoulder_External_Internal_Rotation Json?
+Knee_to_Wall_Test Json?
+  recoveryTime Float?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   @@index([statId,createdAt,updatedAt])

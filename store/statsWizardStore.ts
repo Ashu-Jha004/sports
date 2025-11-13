@@ -8,6 +8,8 @@ import type {
   StaminaRecoveryForm,
   InjuryForm,
 } from "@/types/stats";
+import type { SpeedAndAgilityData } from "@/lib/stats/types/speedAgilityTests";
+
 import type { StrengthPowerTestData } from "@/lib/stats/types/strengthTests";
 import { StrengthCalculations } from "@/lib/stats/types/strengthTests";
 
@@ -18,7 +20,7 @@ import { StrengthCalculations } from "@/lib/stats/types/strengthTests";
 interface WizardFormData {
   basicMetrics: BasicMetricsData;
   strengthPower: StrengthPowerTestData; // ✅ NEW: Uses detailed test structure
-  speedAgility: SpeedAgilityData;
+  speedAgility: SpeedAndAgilityData;
   staminaRecovery: StaminaRecoveryData;
   injuries: InjuryInput[];
 }
@@ -31,13 +33,26 @@ interface BasicMetricsData {
   bodyFat: number | null;
 }
 
-interface SpeedAgilityData {
-  sprintSpeed: number | null;
-  acceleration: number | null;
-  agility: number | null;
-  reactionTime: number | null;
-  balance: number | null;
-  coordination: number | null;
+// Extend the API response type to include JSON fields from Prisma
+interface SpeedAndAgilityResponse {
+  id: string;
+  sprintSpeed: number;
+  Ten_Meter_Sprint?: any;
+  Fourty_Meter_Dash?: any;
+  Repeated_Sprint_Ability?: any;
+  Five_0_Five_Agility_Test?: any;
+  T_Test?: any;
+  Illinois_Agility_Test?: any;
+  Visual_Reaction_Speed_Drill?: any;
+  Long_Jump?: any;
+  Reactive_Agility_T_Test?: any;
+  Standing_Long_Jump?: any;
+  anthropometricData?: any;
+  acceleration?: any;
+  agility?: any;
+  reactionTime?: any;
+  balance?: any;
+  coordination?: any;
 }
 
 interface StaminaRecoveryData {
@@ -225,13 +240,9 @@ const getDefaultFormData = (): WizardFormData => ({
     explosivePower: 0,
   },
   speedAgility: {
-    sprintSpeed: null,
-    acceleration: null,
-    agility: null,
-    reactionTime: null,
-    balance: null,
-    coordination: null,
-  },
+    sprintSpeed: 0,
+    // All test fields are optional and will be undefined by default
+  } as SpeedAndAgilityData,
   staminaRecovery: {
     vo2Max: null,
     flexibility: null,
@@ -576,16 +587,41 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
                         statsData.currentStrength?.explosivePower || 0,
                     },
                     speedAgility: {
-                      sprintSpeed: statsData.currentSpeed?.sprintSpeed || null,
-                      acceleration:
-                        statsData.currentSpeed?.acceleration || null,
-                      agility: statsData.currentSpeed?.agility || null,
-                      reactionTime:
-                        statsData.currentSpeed?.reactionTime || null,
-                      balance: statsData.currentSpeed?.balance || null,
-                      coordination:
-                        statsData.currentSpeed?.coordination || null,
-                    },
+                      sprintSpeed:
+                        (statsData.currentSpeed as any)?.sprintSpeed || 0,
+                      // Load test data from API response (cast to any to bypass type checking)
+                      Ten_Meter_Sprint: (statsData.currentSpeed as any)
+                        ?.Ten_Meter_Sprint,
+                      Fourty_Meter_Dash: (statsData.currentSpeed as any)
+                        ?.Fourty_Meter_Dash,
+                      Repeated_Sprint_Ability: (statsData.currentSpeed as any)
+                        ?.Repeated_Sprint_Ability,
+                      Five_0_Five_Agility_Test: (statsData.currentSpeed as any)
+                        ?.Five_0_Five_Agility_Test,
+                      T_Test: (statsData.currentSpeed as any)?.T_Test,
+                      Illinois_Agility_Test: (statsData.currentSpeed as any)
+                        ?.Illinois_Agility_Test,
+                      Visual_Reaction_Speed_Drill: (
+                        statsData.currentSpeed as any
+                      )?.Visual_Reaction_Speed_Drill,
+                      Long_Jump: (statsData.currentSpeed as any)?.Long_Jump,
+                      Reactive_Agility_T_Test: (statsData.currentSpeed as any)
+                        ?.Reactive_Agility_T_Test,
+                      Standing_Long_Jump: (statsData.currentSpeed as any)
+                        ?.Standing_Long_Jump,
+                      anthropometricData: (statsData.currentSpeed as any)
+                        ?.anthropometricData,
+                      // Legacy fields
+                      acceleration: (statsData.currentSpeed as any)
+                        ?.acceleration,
+                      agility: (statsData.currentSpeed as any)?.agility,
+                      reactionTime: (statsData.currentSpeed as any)
+                        ?.reactionTime,
+                      balance: (statsData.currentSpeed as any)?.balance,
+                      coordination: (statsData.currentSpeed as any)
+                        ?.coordination,
+                    } as SpeedAndAgilityData,
+
                     staminaRecovery: {
                       vo2Max: statsData.currentStamina?.vo2Max || null,
                       flexibility:

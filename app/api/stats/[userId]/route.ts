@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { strengthPowerTestDataSchema } from "@/lib/stats/validators/strengthTests";
+import { speedAndAgilityDataSchema } from "@/lib/stats/validators/speedAgilityValidators";
 
 // Validation schemas (keep or simplify old ones you still need)
 const basicMetricsSchema = z.object({
@@ -10,14 +11,6 @@ const basicMetricsSchema = z.object({
   weight: z.number().min(30).max(200),
   age: z.number().int().min(10).max(50),
   bodyFat: z.number().min(3).max(40),
-});
-const speedAgilitySchema = z.object({
-  sprintSpeed: z.number().min(0).max(100),
-  acceleration: z.number().min(0).max(100),
-  agility: z.number().min(0).max(100),
-  reactionTime: z.number().min(0).max(100),
-  balance: z.number().min(0).max(100),
-  coordination: z.number().min(0).max(100),
 });
 const staminaRecoverySchema = z.object({
   vo2Max: z.number().min(20).max(80),
@@ -39,7 +32,7 @@ const statsSubmissionSchema = z.object({
   userId: z.string(),
   basicMetrics: basicMetricsSchema,
   strengthPower: strengthPowerTestDataSchema,
-  speedAgility: speedAgilitySchema,
+  speedAgility: speedAndAgilityDataSchema,
   staminaRecovery: staminaRecoverySchema,
   injuries: z.array(injurySchema),
   isUpdate: z.boolean().optional(),
@@ -175,8 +168,20 @@ export async function PUT(
 
     const validation = statsSubmissionSchema.safeParse(body);
     if (!validation.success) {
+      console.error(
+        "❌ Validation failed:",
+        JSON.stringify(validation.error.issues, null, 2)
+      );
       return NextResponse.json(
-        { error: "Invalid data", details: validation.error.issues },
+        {
+          error: "Invalid data",
+          details: validation.error.issues,
+          fields: validation.error.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+            code: issue.code,
+          })),
+        },
         { status: 400 }
       );
     }
@@ -326,7 +331,29 @@ export async function PUT(
         await tx.speedAndAgility.create({
           data: {
             statId: stats.id,
-            ...speedAgility,
+            sprintSpeed: speedAgility.sprintSpeed,
+            // Store test data as JSON
+            Ten_Meter_Sprint: speedAgility.Ten_Meter_Sprint || undefined,
+            Fourty_Meter_Dash: speedAgility.Fourty_Meter_Dash || undefined,
+            Repeated_Sprint_Ability:
+              speedAgility.Repeated_Sprint_Ability || undefined,
+            Five_0_Five_Agility_Test:
+              speedAgility.Five_0_Five_Agility_Test || undefined,
+            T_Test: speedAgility.T_Test || undefined,
+            Illinois_Agility_Test:
+              speedAgility.Illinois_Agility_Test || undefined,
+            Visual_Reaction_Speed_Drill:
+              speedAgility.Visual_Reaction_Speed_Drill || undefined,
+            Long_Jump: speedAgility.Long_Jump || undefined,
+            Reactive_Agility_T_Test:
+              speedAgility.Reactive_Agility_T_Test || undefined,
+            Standing_Long_Jump: speedAgility.Standing_Long_Jump || undefined,
+            // Store calculated scores as JSON
+            acceleration: speedAgility.acceleration || undefined,
+            agility: speedAgility.agility || undefined,
+            reactionTime: speedAgility.reactionTime || undefined,
+            balance: speedAgility.balance || undefined,
+            coordination: speedAgility.coordination || undefined,
           },
         });
 
@@ -475,7 +502,32 @@ export async function POST(
       });
 
       await tx.speedAndAgility.create({
-        data: { statId: stats.id, ...speedAgility },
+        data: {
+          statId: stats.id,
+          sprintSpeed: speedAgility.sprintSpeed,
+          // Store test data as JSON
+          Ten_Meter_Sprint: speedAgility.Ten_Meter_Sprint || undefined,
+          Fourty_Meter_Dash: speedAgility.Fourty_Meter_Dash || undefined,
+          Repeated_Sprint_Ability:
+            speedAgility.Repeated_Sprint_Ability || undefined,
+          Five_0_Five_Agility_Test:
+            speedAgility.Five_0_Five_Agility_Test || undefined,
+          T_Test: speedAgility.T_Test || undefined,
+          Illinois_Agility_Test:
+            speedAgility.Illinois_Agility_Test || undefined,
+          Visual_Reaction_Speed_Drill:
+            speedAgility.Visual_Reaction_Speed_Drill || undefined,
+          Long_Jump: speedAgility.Long_Jump || undefined,
+          Reactive_Agility_T_Test:
+            speedAgility.Reactive_Agility_T_Test || undefined,
+          Standing_Long_Jump: speedAgility.Standing_Long_Jump || undefined,
+          // Store calculated scores as JSON
+          acceleration: speedAgility.acceleration || undefined,
+          agility: speedAgility.agility || undefined,
+          reactionTime: speedAgility.reactionTime || undefined,
+          balance: speedAgility.balance || undefined,
+          coordination: speedAgility.coordination || undefined,
+        },
       });
 
       await tx.staminaAndRecovery.create({
