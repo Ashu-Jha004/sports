@@ -21,9 +21,17 @@ export const TEST_EQUIPMENT = {
   T_Test: ["Stopwatch", "4 cones", "Measuring tape"],
   Illinois_Agility_Test: ["Stopwatch", "8 cones", "Measuring tape"],
   Five_0_Five_Agility_Test: ["Stopwatch", "2 cones", "Measuring tape"],
-  Visual_Reaction_Speed_Drill: ["Stopwatch", "Light/sound source (phone app)", "Cones"],
+  Visual_Reaction_Speed_Drill: [
+    "Stopwatch",
+    "Light/sound source (phone app)",
+    "Cones",
+  ],
   Standing_Long_Jump: ["Measuring tape", "2 markers/cones"],
-  Long_Jump: ["Measuring tape", "Runway space", "Sand pit or safe landing area"],
+  Long_Jump: [
+    "Measuring tape",
+    "Runway space",
+    "Sand pit or safe landing area",
+  ],
   Reactive_Agility_T_Test: ["Stopwatch", "4 cones", "Partner for cues"],
 } as const;
 
@@ -36,21 +44,21 @@ export const VALIDATION_RANGES = {
   tenMeterSprint: { min: 1.5, max: 4.0 }, // Elite: 1.6-1.8s, Average: 2.4-3.1s
   fourtyMeterDash: { min: 4.0, max: 8.0 }, // Elite: ~4.6s, Average: 5-6.5s
   repeatedSprintSingle: { min: 3.5, max: 8.0 }, // 30m sprint times
-  
+
   // Agility times in seconds
   tTest: { min: 8.0, max: 15.0 }, // Elite: 9-10s, Average: 11-13s
   illinoisTest: { min: 12.0, max: 22.0 }, // Elite: 14-15s, Average: 16-18s
   five05Test: { min: 2.0, max: 5.0 }, // Directional change test
-  
+
   // Reaction time in milliseconds
   reactionTime: { min: 150, max: 500 }, // Human reaction: 200-300ms average
-  
+
   // Jump distances in centimeters
   standingLongJump: { min: 100, max: 350 }, // Elite: 280-320cm, Average: 180-220cm
   longJump: { min: 200, max: 900 }, // With run-up
-  
+
   // Anthropometric measurements in cm
-  thighGirth: { min: 30, max: 80 },
+  thighGirth: { min: 0, max: 200 },
   calfGirth: { min: 25, max: 60 },
   armSpan: { min: 140, max: 230 },
   footLength: { min: 20, max: 35 },
@@ -102,7 +110,7 @@ export interface FourtyMeterDashTest {
 export interface RepeatedSprintAbilityTest {
   sprintTimes: number[]; // Array of 6 sprint times (30m each)
   restInterval: number; // seconds (typically 20s)
-  
+
   // Auto-calculated fields
   bestTime?: number;
   worstTime?: number;
@@ -240,10 +248,10 @@ export interface ReactiveAgilityTTest {
 export interface SpeedAndAgilityData {
   id?: string;
   statId?: string;
-  
+
   // Overall calculated scores (0-100)
   sprintSpeed: number;
-  
+
   // Individual test data (stored as JSON in Prisma)
   Ten_Meter_Sprint?: TenMeterSprintTest;
   Fourty_Meter_Dash?: FourtyMeterDashTest;
@@ -255,17 +263,17 @@ export interface SpeedAndAgilityData {
   Long_Jump?: LongJumpTest;
   Reactive_Agility_T_Test?: ReactiveAgilityTTest;
   Standing_Long_Jump?: StandingLongJumpTest;
-  
+
   // Legacy fields (JSON) - kept for backward compatibility
   acceleration?: any;
   agility?: any;
   reactionTime?: any;
   balance?: any;
   coordination?: any;
-  
+
   // Shared anthropometric data
   anthropometricData?: AnthropometricData;
-  
+
   // Metadata
   createdAt?: Date;
   updatedAt?: Date;
@@ -302,7 +310,7 @@ export const TEST_CATEGORIES = {
 // TYPE GUARDS & UTILITIES
 // ============================================
 
-export type SpeedAgilityTestName = 
+export type SpeedAgilityTestName =
   | "Ten_Meter_Sprint"
   | "Fourty_Meter_Dash"
   | "Repeated_Sprint_Ability"
