@@ -263,6 +263,13 @@ model StaminaAndRecovery {
   stats        Stats    @relation("StaminaAndRecoveryRelation", fields: [statId], references: [id], onDelete: Cascade)
   vo2Max       Float
 flexibility    Json?
+overallFlexibilityScore   Float?
+ cardiovascularFitnessScore   Float?
+  recoveryEfficiencyScore      Float?
+
+  // Anthropometric data
+  anthropometricData           Json?
+
   //updated field names to be more descriptive
   Beep_Test        Json?
   Yo_Yo_Test      Json?

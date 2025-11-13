@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { strengthPowerTestDataSchema } from "@/lib/stats/validators/strengthTests";
 import { speedAndAgilityDataSchema } from "@/lib/stats/validators/speedAgilityValidators";
+import { staminaRecoveryDataSchema } from "@/lib/stats/validators/staminaRecoveryValidators";
 
 // Validation schemas (keep or simplify old ones you still need)
 const basicMetricsSchema = z.object({
@@ -11,11 +12,6 @@ const basicMetricsSchema = z.object({
   weight: z.number().min(30).max(200),
   age: z.number().int().min(10).max(50),
   bodyFat: z.number().min(3).max(40),
-});
-const staminaRecoverySchema = z.object({
-  vo2Max: z.number().min(20).max(80),
-  flexibility: z.number().min(-20).max(50),
-  recoveryTime: z.number().min(30).max(600),
 });
 const injurySchema = z.object({
   id: z.string().optional(),
@@ -33,7 +29,7 @@ const statsSubmissionSchema = z.object({
   basicMetrics: basicMetricsSchema,
   strengthPower: strengthPowerTestDataSchema,
   speedAgility: speedAndAgilityDataSchema,
-  staminaRecovery: staminaRecoverySchema,
+  staminaRecovery: staminaRecoveryDataSchema,
   injuries: z.array(injurySchema),
   isUpdate: z.boolean().optional(),
 });
@@ -360,22 +356,40 @@ export async function PUT(
         await tx.staminaAndRecovery.create({
           data: {
             statId: stats.id,
-            ...staminaRecovery,
+            vo2Max: staminaRecovery.vo2Max,
+            flexibility: staminaRecovery.flexibility,
+            recoveryTime: staminaRecovery.recoveryTime,
+
+            // Cardiovascular tests
+            Beep_Test: staminaRecovery.Beep_Test || undefined,
+            Cooper_Test: staminaRecovery.Cooper_Test || undefined,
+
+            // Flexibility tests
+            Sit_and_Reach_Test: staminaRecovery.Sit_and_Reach_Test || undefined,
+            Active_Straight_Leg_Raise:
+              staminaRecovery.Active_Straight_Leg_Raise || undefined,
+            Shoulder_External_Internal_Rotation:
+              staminaRecovery.Shoulder_External_Internal_Rotation || undefined,
+            Knee_to_Wall_Test: staminaRecovery.Knee_to_Wall_Test || undefined,
+
+            // Heart rate tests
+            Resting_Heart_Rate: staminaRecovery.Resting_Heart_Rate || undefined,
+            Post_Exercise_Heart_Rate_Recovery:
+              staminaRecovery.Post_Exercise_Heart_Rate_Recovery || undefined,
+            Peak_Heart_Rate: staminaRecovery.Peak_Heart_Rate || undefined,
+
+            // Composite scores
+            overallFlexibilityScore:
+              staminaRecovery.overallFlexibilityScore || undefined,
+            cardiovascularFitnessScore:
+              staminaRecovery.cardiovascularFitnessScore || undefined,
+            recoveryEfficiencyScore:
+              staminaRecovery.recoveryEfficiencyScore || undefined,
+
+            // Anthropometric data
+            anthropometricData: staminaRecovery.anthropometricData || undefined,
           },
         }); // Handle injuries: Mark old active injuries as recovered
-
-        if (currentStats) {
-          await tx.injuryStat.updateMany({
-            where: {
-              statId: stats.id,
-              status: { in: ["active", "recovering"] },
-            },
-            data: {
-              status: "recovered",
-              recoveredAt: new Date(),
-            },
-          });
-        }
 
         if (injuries.length > 0) {
           await tx.injuryStat.createMany({
@@ -531,7 +545,41 @@ export async function POST(
       });
 
       await tx.staminaAndRecovery.create({
-        data: { statId: stats.id, ...staminaRecovery },
+        data: {
+          statId: stats.id,
+          vo2Max: staminaRecovery.vo2Max,
+          flexibility: staminaRecovery.flexibility,
+          recoveryTime: staminaRecovery.recoveryTime,
+
+          // Cardiovascular tests
+          Beep_Test: staminaRecovery.Beep_Test || undefined,
+          Cooper_Test: staminaRecovery.Cooper_Test || undefined,
+
+          // Flexibility tests
+          Sit_and_Reach_Test: staminaRecovery.Sit_and_Reach_Test || undefined,
+          Active_Straight_Leg_Raise:
+            staminaRecovery.Active_Straight_Leg_Raise || undefined,
+          Shoulder_External_Internal_Rotation:
+            staminaRecovery.Shoulder_External_Internal_Rotation || undefined,
+          Knee_to_Wall_Test: staminaRecovery.Knee_to_Wall_Test || undefined,
+
+          // Heart rate tests
+          Resting_Heart_Rate: staminaRecovery.Resting_Heart_Rate || undefined,
+          Post_Exercise_Heart_Rate_Recovery:
+            staminaRecovery.Post_Exercise_Heart_Rate_Recovery || undefined,
+          Peak_Heart_Rate: staminaRecovery.Peak_Heart_Rate || undefined,
+
+          // Composite scores
+          overallFlexibilityScore:
+            staminaRecovery.overallFlexibilityScore || undefined,
+          cardiovascularFitnessScore:
+            staminaRecovery.cardiovascularFitnessScore || undefined,
+          recoveryEfficiencyScore:
+            staminaRecovery.recoveryEfficiencyScore || undefined,
+
+          // Anthropometric data
+          anthropometricData: staminaRecovery.anthropometricData || undefined,
+        },
       });
 
       if (injuries.length > 0) {

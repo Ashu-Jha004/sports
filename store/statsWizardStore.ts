@@ -12,6 +12,7 @@ import type { SpeedAndAgilityData } from "@/lib/stats/types/speedAgilityTests";
 
 import type { StrengthPowerTestData } from "@/lib/stats/types/strengthTests";
 import { StrengthCalculations } from "@/lib/stats/types/strengthTests";
+import type { StaminaRecoveryData } from "@/lib/stats/types/staminaRecoveryTests";
 
 // ============================================
 // UPDATED FORM DATA INTERFACE
@@ -19,13 +20,12 @@ import { StrengthCalculations } from "@/lib/stats/types/strengthTests";
 
 interface WizardFormData {
   basicMetrics: BasicMetricsData;
-  strengthPower: StrengthPowerTestData; // ✅ NEW: Uses detailed test structure
+  strengthPower: StrengthPowerTestData;
   speedAgility: SpeedAndAgilityData;
   staminaRecovery: StaminaRecoveryData;
   injuries: InjuryInput[];
 }
 
-// Keep existing interfaces for other sections
 interface BasicMetricsData {
   height: number | null;
   weight: number | null;
@@ -33,7 +33,6 @@ interface BasicMetricsData {
   bodyFat: number | null;
 }
 
-// Extend the API response type to include JSON fields from Prisma
 interface SpeedAndAgilityResponse {
   id: string;
   sprintSpeed: number;
@@ -53,12 +52,6 @@ interface SpeedAndAgilityResponse {
   reactionTime?: any;
   balance?: any;
   coordination?: any;
-}
-
-interface StaminaRecoveryData {
-  vo2Max: number | null;
-  flexibility: number | null;
-  recoveryTime: number | null;
 }
 
 interface InjuryInput {
@@ -82,8 +75,9 @@ interface StatsWizardStore {
   athlete: VerifiedUser | null;
   existingStats: StatsResponse | null;
   isLoadingStats: boolean;
-  isInitializing: boolean; // Wizard Navigation
+  isInitializing: boolean;
 
+  // Wizard Navigation
   currentStep: number;
   formData: WizardFormData;
   completedSteps: Set<number>;
@@ -102,16 +96,18 @@ interface StatsWizardStore {
       type: "instruction" | "form";
       title: string;
     }
-  >; // Validation & State
+  >;
 
+  // Validation & State
   stepValidation: Record<number, boolean>;
   stepErrors: Record<number, string[]>;
   isDraftSaved: boolean;
   lastSavedAt: Date | null;
   isAutoSaving: boolean;
   isSubmitting: boolean;
-  submitError: string | null; // ✅ NEW: Strength test specific actions
+  submitError: string | null;
 
+  // Strength test specific actions
   addTestAttempt: (
     testName: keyof StrengthPowerTestData,
     attemptData: any
@@ -130,8 +126,9 @@ interface StatsWizardStore {
     testName: keyof StrengthPowerTestData,
     setIndex: number
   ) => void;
-  recalculateScores: () => void; // Existing actions
+  recalculateScores: () => void;
 
+  // Existing actions
   initializeWizard: (athlete: VerifiedUser) => Promise<void>;
   loadExistingStats: (userId: string) => Promise<void>;
   updateFormSection: (
@@ -156,7 +153,7 @@ interface StatsWizardStore {
 }
 
 // ============================================
-// STEP CONFIGURATION (unchanged)
+// STEP CONFIGURATION
 // ============================================
 
 const STEP_CONFIG = {
@@ -241,13 +238,12 @@ const getDefaultFormData = (): WizardFormData => ({
   },
   speedAgility: {
     sprintSpeed: 0,
-    // All test fields are optional and will be undefined by default
   } as SpeedAndAgilityData,
   staminaRecovery: {
-    vo2Max: null,
-    flexibility: null,
-    recoveryTime: null,
-  },
+    vo2Max: 0,
+    flexibility: 0,
+    recoveryTime: 0,
+  } as StaminaRecoveryData,
   injuries: [],
 });
 
@@ -261,6 +257,12 @@ const getDefaultInjury = (): InjuryInput => ({
   status: "active",
   notes: "",
 });
+
+// ============================================
+// ✅ FIX: TIMER MANAGEMENT
+// ============================================
+let recalculateTimer: NodeJS.Timeout | null = null;
+let autoSaveTimer: NodeJS.Timeout | null = null;
 
 // ============================================
 // ZUSTAND STORE
@@ -286,7 +288,11 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
         lastSavedAt: null,
         isAutoSaving: false,
         isSubmitting: false,
-        submitError: null, // ============================================ // ✅ NEW: STRENGTH TEST MANAGEMENT ACTIONS // ============================================
+        submitError: null,
+
+        // ============================================
+        // ✅ FIXED: STRENGTH TEST MANAGEMENT ACTIONS
+        // ============================================
 
         addTestAttempt: (testName, attemptData) => {
           set((state) => {
@@ -319,8 +325,9 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
                 },
                 isDraftSaved: false,
               };
-            } // Add new attempt
+            }
 
+            // Add new attempt
             const newAttempt = {
               attemptNumber: currentTest.attempts.length + 1,
               data: attemptData,
@@ -342,10 +349,13 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
             };
           });
 
-          setTimeout(() => {
+          // ✅ FIX: Use single timer with cleanup
+          if (recalculateTimer) clearTimeout(recalculateTimer);
+          recalculateTimer = setTimeout(() => {
             get().recalculateScores();
             get().autoSave();
-          }, 500);
+            recalculateTimer = null;
+          }, 300);
         },
 
         removeTestAttempt: (testName, attemptIndex) => {
@@ -362,8 +372,9 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
 
             const updatedAttempts = currentTest.attempts.filter(
               (_, index) => index !== attemptIndex
-            ); // Renumber attempts
+            );
 
+            // Renumber attempts
             const renumberedAttempts = updatedAttempts.map(
               (attempt, index) => ({
                 ...attempt,
@@ -387,10 +398,13 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
             };
           });
 
-          setTimeout(() => {
+          // ✅ FIX: Use single timer with cleanup
+          if (recalculateTimer) clearTimeout(recalculateTimer);
+          recalculateTimer = setTimeout(() => {
             get().recalculateScores();
             get().autoSave();
-          }, 500);
+            recalculateTimer = null;
+          }, 300);
         },
 
         updateTestAttempt: (testName, attemptIndex, attemptData) => {
@@ -426,10 +440,13 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
             };
           });
 
-          setTimeout(() => {
+          // ✅ FIX: Use single timer with cleanup (longer delay for updates)
+          if (recalculateTimer) clearTimeout(recalculateTimer);
+          recalculateTimer = setTimeout(() => {
             get().recalculateScores();
             get().autoSave();
-          }, 1000);
+            recalculateTimer = null;
+          }, 500);
         },
 
         addTestSet: (testName, setData) => {
@@ -459,8 +476,9 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
                 },
                 isDraftSaved: false,
               };
-            } // Add new set
+            }
 
+            // Add new set
             return {
               formData: {
                 ...state.formData,
@@ -476,10 +494,13 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
             };
           });
 
-          setTimeout(() => {
+          // ✅ FIX: Use single timer with cleanup
+          if (recalculateTimer) clearTimeout(recalculateTimer);
+          recalculateTimer = setTimeout(() => {
             get().recalculateScores();
             get().autoSave();
-          }, 500);
+            recalculateTimer = null;
+          }, 300);
         },
 
         removeTestSet: (testName, setIndex) => {
@@ -513,12 +534,16 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
             };
           });
 
-          setTimeout(() => {
+          // ✅ FIX: Use single timer with cleanup
+          if (recalculateTimer) clearTimeout(recalculateTimer);
+          recalculateTimer = setTimeout(() => {
             get().recalculateScores();
             get().autoSave();
-          }, 500);
+            recalculateTimer = null;
+          }, 300);
         },
 
+        // ✅ FIX: Improved recalculateScores with timer cleanup
         recalculateScores: () => {
           set((state) => {
             const strengthData = state.formData.strengthPower;
@@ -550,7 +575,11 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
               },
             };
           });
-        }, // ============================================ // EXISTING ACTIONS (mostly unchanged) // ============================================
+        },
+
+        // ============================================
+        // EXISTING ACTIONS
+        // ============================================
 
         initializeWizard: async (athlete: VerifiedUser) => {
           set({ isInitializing: true, athlete });
@@ -589,7 +618,6 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
                     speedAgility: {
                       sprintSpeed:
                         (statsData.currentSpeed as any)?.sprintSpeed || 0,
-                      // Load test data from API response (cast to any to bypass type checking)
                       Ten_Meter_Sprint: (statsData.currentSpeed as any)
                         ?.Ten_Meter_Sprint,
                       Fourty_Meter_Dash: (statsData.currentSpeed as any)
@@ -611,7 +639,6 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
                         ?.Standing_Long_Jump,
                       anthropometricData: (statsData.currentSpeed as any)
                         ?.anthropometricData,
-                      // Legacy fields
                       acceleration: (statsData.currentSpeed as any)
                         ?.acceleration,
                       agility: (statsData.currentSpeed as any)?.agility,
@@ -623,11 +650,11 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
                     } as SpeedAndAgilityData,
 
                     staminaRecovery: {
-                      vo2Max: statsData.currentStamina?.vo2Max || null,
+                      vo2Max: statsData.currentStamina?.vo2Max || 0,
                       flexibility:
-                        statsData.currentStamina?.flexibility || null,
+                        statsData.currentStamina?.flexibility || 0,
                       recoveryTime:
-                        statsData.currentStamina?.recoveryTime || null,
+                        statsData.currentStamina?.recoveryTime || 0,
                     },
                     injuries: statsData.activeInjuries.map((injury) => ({
                       id: injury.id,
@@ -658,7 +685,6 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
         },
 
         loadExistingStats: async (userId: string) => {
-          // Simplified - handled by initializeWizard
           console.log("Loading stats for:", userId);
         },
 
@@ -674,25 +700,28 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
               },
             },
             isDraftSaved: false,
-          })); // Auto-recalculate if strengthPower section
+          }));
 
+          // Auto-recalculate if strengthPower section
           if (section === "strengthPower") {
-            setTimeout(() => {
+            if (recalculateTimer) clearTimeout(recalculateTimer);
+            recalculateTimer = setTimeout(() => {
               get().recalculateScores();
-            }, 500);
+              recalculateTimer = null;
+            }, 300);
           }
 
-          setTimeout(() => {
-            get().autoSave();
-          }, 1000);
-        }, // Injury Management (unchanged)
+          // ✅ FIX: Consolidated auto-save with single timer
+          get().autoSave();
+        },
 
+        // Injury Management
         updateInjuries: (injuries) => {
           set((state) => ({
             formData: { ...state.formData, injuries },
             isDraftSaved: false,
           }));
-          setTimeout(() => get().autoSave(), 1000);
+          get().autoSave();
         },
 
         addInjury: () => {
@@ -715,7 +744,7 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
             },
             isDraftSaved: false,
           });
-          setTimeout(() => get().autoSave(), 500);
+          get().autoSave();
         },
 
         updateInjury: (index, injuryData) => {
@@ -729,9 +758,10 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
             },
             isDraftSaved: false,
           });
-          setTimeout(() => get().autoSave(), 1000);
-        }, // Navigation (unchanged)
+          get().autoSave();
+        },
 
+        // Navigation
         validateCurrentStep: () => {
           const { currentStep, stepSections } = get();
           const stepConfig = stepSections[currentStep];
@@ -777,29 +807,43 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
           set((state) => ({
             completedSteps: new Set([...state.completedSteps, step]),
           }));
-        }, // Auto-save (unchanged)
+        },
 
+        // ✅ FIX: Improved auto-save with single timer and debouncing
         autoSave: async () => {
           const { isAutoSaving, athlete, formData } = get();
-          if (isAutoSaving || !athlete) return;
+          if (!athlete) return;
 
-          set({ isAutoSaving: true });
+          // ✅ Clear existing timer to debounce
+          if (autoSaveTimer) clearTimeout(autoSaveTimer);
 
-          try {
-            localStorage.setItem(
-              `stats-draft-${athlete.id}`,
-              JSON.stringify({ formData, savedAt: new Date().toISOString() })
-            );
-            console.log("💾 Auto-saved draft locally");
-            set({
-              isDraftSaved: true,
-              lastSavedAt: new Date(),
-              isAutoSaving: false,
-            });
-          } catch (error) {
-            console.error("❌ Auto-save failed:", error);
-            set({ isAutoSaving: false });
-          }
+          autoSaveTimer = setTimeout(async () => {
+            // Check again if already saving (race condition guard)
+            if (get().isAutoSaving) {
+              autoSaveTimer = null;
+              return;
+            }
+
+            set({ isAutoSaving: true });
+
+            try {
+              localStorage.setItem(
+                `stats-draft-${athlete.id}`,
+                JSON.stringify({ formData, savedAt: new Date().toISOString() })
+              );
+              console.log("💾 Auto-saved draft locally");
+              set({
+                isDraftSaved: true,
+                lastSavedAt: new Date(),
+                isAutoSaving: false,
+              });
+            } catch (error) {
+              console.error("❌ Auto-save failed:", error);
+              set({ isAutoSaving: false });
+            }
+
+            autoSaveTimer = null;
+          }, 1000); // 1 second debounce
         },
 
         saveDraft: async () => {
@@ -823,8 +867,9 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
             console.error("❌ Draft save failed:", error);
             return false;
           }
-        }, // Final Submission (unchanged)
+        },
 
+        // Final Submission
         submitStats: async () => {
           const { athlete, formData, existingStats } = get();
           if (!athlete) return false;
@@ -856,9 +901,10 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
               return true;
             } else {
               const error = await response.json();
+              console.error("❌ Submission failed:", error);
               set({
                 isSubmitting: false,
-                submitError: error.message || "Submission failed",
+                submitError: error.error || error.message || "Submission failed",
               });
               return false;
             }
@@ -870,6 +916,10 @@ export const useStatsWizardStore = create<StatsWizardStore>()(
         },
 
         resetWizard: () => {
+          // ✅ FIX: Clear timers on reset
+          if (recalculateTimer) clearTimeout(recalculateTimer);
+          if (autoSaveTimer) clearTimeout(autoSaveTimer);
+          
           set({
             athlete: null,
             existingStats: null,

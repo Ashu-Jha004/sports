@@ -163,7 +163,6 @@ export const SpeedAgilityForm: React.FC<SpeedAgilityFormProps> = ({
               </div>
               <Activity className="w-6 h-6 text-blue-600" />
             </div>
-
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <div className="bg-white rounded-lg p-3 border border-blue-200">
                 <p className="text-xs text-gray-600">Sprint Speed</p>

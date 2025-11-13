@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+"use client";
+
+import React, { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +23,8 @@ import { useOTPVerificationStore } from "../../../stores/otpVerificationStore";
 import { useRouter } from "next/navigation";
 
 export const SuccessStep: React.FC = () => {
-  const { athlete, formData, resetWizard } = useStatsWizardStore();
+  const { athlete, formData, existingStats, resetWizard } =
+    useStatsWizardStore();
   const { cleanupAfterSubmission, clearAllData } = useOTPVerificationStore();
   const router = useRouter();
 
@@ -30,26 +33,39 @@ export const SuccessStep: React.FC = () => {
   >("pending");
   const [countdown, setCountdown] = useState(10);
   const [autoRedirect, setAutoRedirect] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  // Calculate overall performance score
-  // ✅ FIND the calculateOverallScore function and UPDATE it:
-  const calculateOverallScore = () => {
-    const { formData } = useStatsWizardStore.getState();
+  // ✅ FIX: Calculate overall performance score (memoized)
+  const calculateOverallScore = useCallback(() => {
+    const scores: number[] = [];
 
-    const scores = [
-      ...Object.values(formData.strengthPower).filter(
-        (v) => v !== null && v !== undefined
-      ),
-      ...Object.values(formData.speedAgility).filter(
-        (v) => v !== null && v !== undefined
-      ),
-    ];
+    // Strength scores
+    if (formData.strengthPower.muscleMass)
+      scores.push(formData.strengthPower.muscleMass);
+    if (formData.strengthPower.enduranceStrength)
+      scores.push(formData.strengthPower.enduranceStrength);
+    if (formData.strengthPower.explosivePower)
+      scores.push(formData.strengthPower.explosivePower);
+
+    // Speed scores
+    if (formData.speedAgility.sprintSpeed)
+      scores.push(formData.speedAgility.sprintSpeed);
+    if (formData.speedAgility.acceleration?.score)
+      scores.push(formData.speedAgility.acceleration.score);
+    if (formData.speedAgility.agility?.score)
+      scores.push(formData.speedAgility.agility.score);
+
+    // Stamina scores
+    if (formData.staminaRecovery.overallFlexibilityScore)
+      scores.push(formData.staminaRecovery.overallFlexibilityScore);
+    if (formData.staminaRecovery.cardiovascularFitnessScore)
+      scores.push(formData.staminaRecovery.cardiovascularFitnessScore);
 
     if (scores.length === 0) return 0;
     return Math.round(
-      scores.reduce((sum, score) => sum + (score as number), 0) / scores.length
+      scores.reduce((sum, score) => sum + score, 0) / scores.length
     );
-  };
+  }, [formData]);
 
   const overallScore = calculateOverallScore();
 
@@ -85,16 +101,60 @@ export const SuccessStep: React.FC = () => {
 
   const performanceClass = getPerformanceClass(overallScore);
 
-  // ✅ NEW: Auto-cleanup and countdown logic
+  // ✅ FIX: Count data points correctly
+  const dataPointsCount = useCallback(() => {
+    let count = 0;
+
+    // Basic metrics
+    count += Object.values(formData.basicMetrics).filter(
+      (v) => v !== null && v !== undefined
+    ).length;
+
+    // Strength tests (count tests with attempts/sets)
+    Object.values(formData.strengthPower).forEach((test) => {
+      if (test && typeof test === "object") {
+        if ("attempts" in test && Array.isArray(test.attempts))
+          count += test.attempts.length;
+        if ("sets" in test && Array.isArray(test.sets))
+          count += test.sets.length;
+      }
+    });
+
+    // Speed tests
+    Object.values(formData.speedAgility).forEach((test) => {
+      if (test && typeof test === "object" && "attempts" in test) {
+        count += Array.isArray(test.attempts) ? test.attempts.length : 0;
+      }
+    });
+
+    // Stamina tests
+    Object.values(formData.staminaRecovery).forEach((test) => {
+      if (test && typeof test === "object") {
+        if ("attempts" in test && Array.isArray(test.attempts))
+          count += test.attempts.length;
+        if ("entries" in test && Array.isArray(test.entries))
+          count += test.entries.length;
+      }
+    });
+
+    // Historical data
+    const historicalCount = existingStats
+      ? (existingStats.strengthHistory?.length || 0) +
+        (existingStats.speedHistory?.length || 0) +
+        (existingStats.staminaHistory?.length || 0)
+      : 0;
+
+    return count + historicalCount;
+  }, [formData, existingStats]);
+
+  // ✅ FIX: Security cleanup (only runs once)
   useEffect(() => {
     const startCleanup = async () => {
-      if (!athlete) return;
+      if (!athlete || cleanupStatus !== "pending") return;
 
       setCleanupStatus("cleaning");
 
       try {
-        // Extract OTP from athlete's requestId or use a stored OTP
-        // This assumes you store the OTP somewhere accessible
         const storedOtp = localStorage.getItem("current-otp");
         const otp = storedOtp ? parseInt(storedOtp) : null;
 
@@ -113,40 +173,50 @@ export const SuccessStep: React.FC = () => {
       }
     };
 
-    // Start cleanup after 2 seconds
     const cleanupTimer = setTimeout(startCleanup, 2000);
-
     return () => clearTimeout(cleanupTimer);
-  }, [athlete, cleanupAfterSubmission, clearAllData]);
+  }, [athlete, cleanupAfterSubmission, clearAllData, cleanupStatus]);
 
-  // Countdown timer
-  useEffect(() => {
-    if (cleanupStatus === "complete" && autoRedirect && countdown > 0) {
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            handleBackToDashboard();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+  // ✅ FIX: Navigation handler (prevents state update during render)
+  const handleBackToDashboard = useCallback(() => {
+    if (isNavigating) return;
 
-      return () => clearInterval(timer);
-    }
-  }, [cleanupStatus, autoRedirect, countdown]);
+    console.log("🏠 Redirecting to dashboard...");
+    setIsNavigating(true);
 
-  // Navigation handlers
-  const handleBackToDashboard = () => {
-    resetWizard();
+    // Navigate first
     router.push("/business/services/dashboard");
-  };
 
-  const handleStayOnPage = () => {
+    // Reset wizard after navigation starts
+    setTimeout(() => {
+      resetWizard();
+    }, 100);
+  }, [isNavigating, router, resetWizard]);
+
+  // ✅ FIX: Countdown timer (separated from navigation)
+  useEffect(() => {
+    if (cleanupStatus !== "complete" || !autoRedirect || countdown <= 0) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          handleBackToDashboard();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [cleanupStatus, autoRedirect, countdown, handleBackToDashboard]);
+
+  // ✅ FIX: Stay on page handler
+  const handleStayOnPage = useCallback(() => {
     setAutoRedirect(false);
     setCountdown(0);
-  };
+  }, []);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -171,6 +241,7 @@ export const SuccessStep: React.FC = () => {
           <strong>{athlete?.firstName}</strong>
         </p>
       </div>
+
       {/* Security Cleanup Status */}
       <Card className="bg-blue-50 border-blue-200">
         <CardHeader>
@@ -227,9 +298,8 @@ export const SuccessStep: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
       {/* Assessment Summary */}
-      // ✅ FIND the Assessment Summary Card and UPDATE to use existingStats if
-      available:
       <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
         <CardHeader>
           <CardTitle className="flex items-center text-green-900">
@@ -258,27 +328,7 @@ export const SuccessStep: React.FC = () => {
             <div className="text-center">
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {(() => {
-                    const { formData, existingStats } =
-                      useStatsWizardStore.getState();
-
-                    // Count current form data points
-                    const formDataPoints = [
-                      ...Object.values(formData.basicMetrics),
-                      ...Object.values(formData.strengthPower),
-                      ...Object.values(formData.speedAgility),
-                      ...Object.values(formData.staminaRecovery),
-                    ].filter((v) => v !== null && v !== undefined).length;
-
-                    // Add historical data count if available
-                    const historicalCount = existingStats
-                      ? (existingStats.strengthHistory?.length || 0) +
-                        (existingStats.speedHistory?.length || 0) +
-                        (existingStats.staminaHistory?.length || 0)
-                      : 0;
-
-                    return formDataPoints + historicalCount;
-                  })()}
+                  {dataPointsCount()}
                 </div>
                 <div className="text-sm font-medium text-gray-900">
                   Data Points
@@ -306,6 +356,7 @@ export const SuccessStep: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
       {/* Auto-redirect Notice */}
       {cleanupStatus === "complete" && autoRedirect && countdown > 0 && (
         <Card className="bg-yellow-50 border-yellow-200">
@@ -323,18 +374,21 @@ export const SuccessStep: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
         <Button
           onClick={handleBackToDashboard}
           className="bg-indigo-600 hover:bg-indigo-700"
           size="lg"
+          disabled={isNavigating}
         >
           <Home className="w-4 h-4 mr-2" />
-          Back to Dashboard
+          {isNavigating ? "Redirecting..." : "Back to Dashboard"}
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
+
       {/* Footer Note */}
       <div className="text-center pt-6 border-t">
         <p className="text-sm text-gray-500">

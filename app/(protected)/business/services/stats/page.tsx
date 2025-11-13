@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { StatsWizardContainer } from "../components/stats/StatsWizardContainer";
 import { AthleteHeader } from "../components/stats/AthleteHeader";
@@ -8,7 +8,6 @@ import { CircularProgress } from "../components/stats/CircularProgress";
 import { useWizardNavigation } from "@/hooks/useWizardNavigation";
 import { useStatsWizardStore } from "@/store/statsWizardStore";
 import { useOTPVerificationStore } from "../../stores/otpVerificationStore";
-// ✅ ADD: Import new type definitions
 import type { StatsResponse, AthleteInfo } from "@/types/stats";
 
 import {
@@ -47,139 +46,148 @@ export default function StatsUpdatePage() {
     goToStep,
   } = useWizardNavigation();
 
+  // ✅ Helper function to safely get score values
+  const getScoreValue = useCallback((data: any): number | undefined => {
+    if (!data) return undefined;
+    if (typeof data === "number") return data;
+    if (typeof data === "object" && "score" in data) return data.score;
+    return undefined;
+  }, []);
+
   // ✅ Wait for store hydration
   useEffect(() => {
     const timer = setTimeout(() => {
       setStoreHydrated(true);
-    }, 200); // Give store time to hydrate
+    }, 100);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // ✅ Main initialization logic
-  useEffect(() => {
-    const initializeFromOTP = async () => {
-      if (!storeHydrated) return;
+  // ✅ FIX: Memoized initialization to prevent multiple calls
+  const initializeFromOTP = useCallback(async () => {
+    if (!storeHydrated) return;
 
+    try {
+      // Debug information
+      const debug = {
+        currentVerifiedUser: currentVerifiedUser?.firstName || null,
+        cacheKeys: Object.keys(verifiedUsersCache),
+        cacheCount: Object.keys(verifiedUsersCache).length,
+        localStorage: null,
+        wizardAthlete: athlete?.firstName || null,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+
+      // Check localStorage directly
       try {
-        // Debug information
-        const debug = {
-          currentVerifiedUser: currentVerifiedUser?.firstName || null,
-          cacheKeys: Object.keys(verifiedUsersCache),
-          cacheCount: Object.keys(verifiedUsersCache).length,
-          localStorage: null,
-          wizardAthlete: athlete?.firstName || null,
-          timestamp: new Date().toLocaleTimeString(),
-        };
+        const stored = localStorage.getItem("otp-verification-storage");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          debug.localStorage =
+            parsed.state?.currentVerifiedUser?.firstName || "None";
+        }
+      } catch (e) {
+        console.warn("⚠️ Error parsing localStorage:", e);
+      }
 
-        // Check localStorage directly
+      setDebugInfo(debug);
+      console.log("🔍 Stats Page Debug Info:", debug);
+
+      // ✅ Try multiple sources for verified user
+      let verifiedUser: VerifiedUser | null = null;
+
+      // Source 1: Current verified user from store
+      if (currentVerifiedUser) {
+        verifiedUser = currentVerifiedUser;
+        console.log(
+          "✅ Source 1: Using current verified user:",
+          verifiedUser?.firstName || "Unknown"
+        );
+      }
+
+      // Source 2: Try from wizard store (if already initialized)
+      if (!verifiedUser && athlete) {
+        verifiedUser = athlete;
+        console.log(
+          "✅ Source 2: Using wizard athlete:",
+          verifiedUser?.firstName || "Unknown"
+        );
+      }
+
+      // Source 3: Try from cache (most recent verification)
+      if (!verifiedUser && Object.keys(verifiedUsersCache).length > 0) {
+        const latestOtp: any = Object.keys(verifiedUsersCache).sort().pop();
+        if (latestOtp && verifiedUsersCache[latestOtp]) {
+          verifiedUser = verifiedUsersCache[latestOtp];
+          console.log(
+            "✅ Source 3: Using cached user:",
+            verifiedUser?.firstName || "Unknown"
+          );
+        }
+      }
+
+      // Source 4: Try from localStorage directly
+      if (!verifiedUser) {
         try {
           const stored = localStorage.getItem("otp-verification-storage");
           if (stored) {
             const parsed = JSON.parse(stored);
-          }
-        } catch (e) {
-          console.log(e);
-        }
+            const storedUser = parsed.state?.currentVerifiedUser;
+            if (storedUser) {
+              verifiedUser = storedUser;
+              console.log(
+                "✅ Source 4: Using localStorage user:",
+                verifiedUser?.firstName || "Unknown"
+              );
+            }
 
-        setDebugInfo(debug);
-        console.log("🔍 Stats Page Debug Info:", debug);
-
-        // ✅ Try multiple sources for verified user
-        let verifiedUser: VerifiedUser | null = null;
-
-        // Source 1: Current verified user from store
-        if (currentVerifiedUser) {
-          verifiedUser = currentVerifiedUser;
-          console.log(
-            "✅ Source 1: Using current verified user:",
-            verifiedUser.firstName
-          );
-        }
-
-        // Source 2: Try from wizard store (if already initialized)
-        if (!verifiedUser && athlete) {
-          verifiedUser = athlete;
-          console.log(
-            "✅ Source 2: Using wizard athlete:",
-            verifiedUser.firstName
-          );
-        }
-
-        // Source 3: Try from cache (most recent verification)
-        if (!verifiedUser && Object.keys(verifiedUsersCache).length > 0) {
-          const latestOtp: any = Object.keys(verifiedUsersCache).sort().pop();
-          if (latestOtp && verifiedUsersCache[latestOtp]) {
-            verifiedUser = verifiedUsersCache[latestOtp];
-            console.log("✅ Source 3: Using cached user:", verifiedUser);
-          }
-        }
-
-        // Source 4: Try from localStorage directly
-        if (!verifiedUser) {
-          try {
-            const stored = localStorage.getItem("otp-verification-storage");
-            if (stored) {
-              const parsed = JSON.parse(stored);
-              const storedUser = parsed.state?.currentVerifiedUser;
-              if (storedUser) {
-                verifiedUser = storedUser;
-                console.log(
-                  "✅ Source 4: Using localStorage user:",
-                  verifiedUser
-                );
-              }
-
-              // Try cache from localStorage
-              if (!verifiedUser && parsed.state?.verifiedUsersCache) {
-                const cacheKeys = Object.keys(parsed.state.verifiedUsersCache);
-                if (cacheKeys.length > 0) {
-                  const latestKey = cacheKeys.sort().pop();
-                  if (latestKey) {
-                    verifiedUser = parsed.state.verifiedUsersCache[latestKey];
-                    console.log(
-                      "✅ Source 4b: Using localStorage cache:",
-                      verifiedUser?.firstName
-                    );
-                  }
+            // Try cache from localStorage
+            if (!verifiedUser && parsed.state?.verifiedUsersCache) {
+              const cacheKeys = Object.keys(parsed.state.verifiedUsersCache);
+              if (cacheKeys.length > 0) {
+                const latestKey = cacheKeys.sort().pop();
+                if (latestKey) {
+                  verifiedUser = parsed.state.verifiedUsersCache[latestKey];
+                  console.log(
+                    "✅ Source 4b: Using localStorage cache:",
+                    verifiedUser?.firstName || "Unknown"
+                  );
                 }
               }
             }
-          } catch (e) {
-            console.log("❌ Error parsing localStorage:", e);
           }
+        } catch (e) {
+          console.warn("⚠️ Error parsing localStorage:", e);
         }
-
-        if (!verifiedUser) {
-          console.log("❌ Stats Page: No verified user found from any source");
-          setError(
-            "OTP verification not found. Please complete OTP verification first."
-          );
-          setIsInitializing(false);
-          return;
-        }
-
-        console.log(
-          "✅ Stats Page: Initializing with verified user:",
-          verifiedUser.firstName
-        );
-
-        // Initialize wizard with verified user
-        await initializeWizard(verifiedUser);
-
-        setIsInitializing(false);
-        setError(null);
-      } catch (err) {
-        console.error("❌ Stats Page Error:", err);
-        setError(
-          "Failed to initialize stats wizard: " +
-            (err instanceof Error ? err.message : "Unknown error")
-        );
-        setIsInitializing(false);
       }
-    };
 
-    initializeFromOTP();
+      if (!verifiedUser) {
+        console.error("❌ Stats Page: No verified user found from any source");
+        setError(
+          "OTP verification not found. Please complete OTP verification first."
+        );
+        setIsInitializing(false);
+        return;
+      }
+
+      console.log(
+        "✅ Stats Page: Initializing with verified user:",
+        verifiedUser.firstName
+      );
+
+      // Initialize wizard with verified user
+      await initializeWizard(verifiedUser);
+
+      setIsInitializing(false);
+      setError(null);
+    } catch (err) {
+      console.error("❌ Stats Page Error:", err);
+      setError(
+        "Failed to initialize stats wizard: " +
+          (err instanceof Error ? err.message : "Unknown error")
+      );
+      setIsInitializing(false);
+    }
   }, [
     storeHydrated,
     currentVerifiedUser,
@@ -187,6 +195,11 @@ export default function StatsUpdatePage() {
     athlete,
     initializeWizard,
   ]);
+
+  // ✅ Call initialization only once
+  useEffect(() => {
+    initializeFromOTP();
+  }, [initializeFromOTP]);
 
   // ✅ Auto-redirect logic with countdown
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(
@@ -227,7 +240,7 @@ export default function StatsUpdatePage() {
   ]);
 
   // ✅ Manual retry function
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     setIsInitializing(true);
     setError(null);
     setRedirectCountdown(null);
@@ -237,7 +250,7 @@ export default function StatsUpdatePage() {
       setStoreHydrated(false);
       setTimeout(() => setStoreHydrated(true), 100);
     }, 100);
-  };
+  }, []);
 
   // Loading State
   if (isInitializing || !storeHydrated) {
@@ -320,7 +333,7 @@ export default function StatsUpdatePage() {
                 </p>
                 <p>
                   <strong>LocalStorage:</strong>{" "}
-                  {JSON.stringify(debugInfo.localStorage)}
+                  {debugInfo.localStorage || "None"}
                 </p>
               </div>
             </CardContent>
@@ -388,11 +401,13 @@ export default function StatsUpdatePage() {
           <AthleteHeader
             athlete={activeUser}
             className="mb-6"
-            showStatsInfo={!!existingStats} // ✅ ADD: Show stats info if exists
-            lastUpdatedBy={existingStats?.lastUpdatedBy} // ✅ ADD: Pass stats metadata
-            lastUpdatedAt={existingStats?.lastUpdatedAt} // ✅ ADD: Pass stats metadata
+            showStatsInfo={!!existingStats}
+            lastUpdatedBy={existingStats?.lastUpdatedBy}
+            lastUpdatedAt={existingStats?.lastUpdatedAt}
             lastUpdatedByName={existingStats?.lastUpdatedByName}
           />
+
+          {/* ✅ Existing Stats Overview */}
           {existingStats && !isInitializing && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
               <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
@@ -419,21 +434,64 @@ export default function StatsUpdatePage() {
                   <div className="bg-white p-3 rounded border">
                     <h4 className="font-medium text-gray-700 mb-2">Strength</h4>
                     <div className="text-sm space-y-1">
-                      <p>Overall: {existingStats.currentStrength.strength}</p>
-                      <p>
-                        Power: {existingStats.currentStrength.explosivePower}
-                      </p>
+                      {existingStats.currentStrength.muscleMass !==
+                        undefined && (
+                        <p>
+                          Muscle:{" "}
+                          {existingStats.currentStrength.muscleMass.toFixed(1)}
+                          /100
+                        </p>
+                      )}
+                      {existingStats.currentStrength.explosivePower !==
+                        undefined && (
+                        <p>
+                          Power:{" "}
+                          {existingStats.currentStrength.explosivePower.toFixed(
+                            1
+                          )}
+                          /100
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
 
-                {/* Speed */}
+                {/* Speed - ✅ FIXED: Proper type checking */}
                 {existingStats.currentSpeed && (
                   <div className="bg-white p-3 rounded border">
-                    <h4 className="font-medium text-gray-700 mb-2">Speed</h4>
+                    <h4 className="font-medium text-gray-700 mb-2">
+                      Speed & Agility
+                    </h4>
                     <div className="text-sm space-y-1">
-                      <p>Sprint: {existingStats.currentSpeed.sprintSpeed}</p>
-                      <p>Agility: {existingStats.currentSpeed.agility}</p>
+                      {existingStats.currentSpeed.sprintSpeed !== undefined && (
+                        <p>
+                          Sprint:{" "}
+                          {existingStats.currentSpeed.sprintSpeed.toFixed(1)}
+                          /100
+                        </p>
+                      )}
+                      {(() => {
+                        const agilityScore = getScoreValue(
+                          existingStats.currentSpeed.agility
+                        );
+                        return (
+                          agilityScore !== undefined && (
+                            <p>Agility: {agilityScore.toFixed(1)}/100</p>
+                          )
+                        );
+                      })()}
+                      {(() => {
+                        const accelerationScore = getScoreValue(
+                          existingStats.currentSpeed.acceleration
+                        );
+                        return (
+                          accelerationScore !== undefined && (
+                            <p>
+                              Acceleration: {accelerationScore.toFixed(1)}/100
+                            </p>
+                          )
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
@@ -462,6 +520,7 @@ export default function StatsUpdatePage() {
               </div>
             </div>
           )}
+
           {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Progress Sidebar */}
