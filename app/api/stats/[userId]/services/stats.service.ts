@@ -44,7 +44,7 @@ export async function getAthleteStats(
     // Fetch athlete info without over-fetching
     const athlete = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, firstName: true, lastName: true },
+      select: { id: true, firstName: true, lastName: true, clerkId: true },
     });
 
     if (!athlete) throw new NotFoundError("Athlete");

@@ -9,11 +9,7 @@ import {
 import { auth } from "@clerk/nextjs/server";
 import { statsSubmissionSchema } from "./types"; // your Zod schema
 import { ValidationError, NotFoundError } from "./types";
-
-async function checkModeratorAccess(clerkUserId: string) {
-  // Use your existing moderator check logic here or import from middleware
-}
-
+import { checkModeratorAccess } from "./middleware";
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }

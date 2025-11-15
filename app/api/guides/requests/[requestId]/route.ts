@@ -1,10 +1,8 @@
-// app/api/guides/requests/[requestId]/route.ts (ENHANCED WITH SCHEDULING DATA & OTP)
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
-// Enhanced validation schemas
 const acceptRequestSchema = z.object({
   action: z.literal("ACCEPT"),
   message: z.string().min(1).max(500),
@@ -23,12 +21,8 @@ const rejectRequestSchema = z.object({
 
 const updateRequestSchema = z.union([acceptRequestSchema, rejectRequestSchema]);
 
-// OTP generation function
-const generateOTP = (): number => {
-  return Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
-};
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000);
 
-// Equipment parsing function
 const parseEquipment = (equipmentString: string): string[] => {
   if (!equipmentString.trim()) return [];
   return equipmentString
@@ -37,25 +31,31 @@ const parseEquipment = (equipmentString: string): string[] => {
     .filter((item) => item.length > 0);
 };
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { requestId: string } }
-) {
+interface RouteContext {
+  params: Promise<{ requestId: string }>;
+}
+
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { requestId } = await params;
+    const { requestId } = await context.params;
+    if (!requestId) {
+      return NextResponse.json(
+        { error: "Missing requestId parameter" },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
-
-    console.log("📥 Received request data:", body);
-
     const validatedData = updateRequestSchema.parse(body);
-    console.log("✅ Validated data:", validatedData);
 
-    // Get user by clerkId
+    // Logger.debug("Validated data", validatedData);
+
+    // Retrieve user by clerkId
     const user = await prisma.user.findUnique({
       where: { clerkId: userId },
       select: { id: true, firstName: true, lastName: true },
@@ -65,12 +65,9 @@ export async function PUT(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get guide info
+    // Check guide approval status
     const guide = await prisma.guide.findFirst({
-      where: {
-        userId: user.id,
-        status: "approved",
-      },
+      where: { userId: user.id, status: "approved" },
       select: { id: true },
     });
 
@@ -81,79 +78,54 @@ export async function PUT(
       );
     }
 
-    // Get the request and verify ownership
+    // Fetch pending evaluation request owned by this guide
     const evaluationRequest = await prisma.physicalEvaluationRequest.findFirst({
-      where: {
-        id: requestId,
-        guideId: guide.id,
-        status: "PENDING",
-      },
+      where: { id: requestId, guideId: guide.id, status: "PENDING" },
       include: {
-        user: {
-          select: { id: true, firstName: true, lastName: true },
-        },
+        user: { select: { id: true, firstName: true, lastName: true } },
       },
     });
 
     if (!evaluationRequest) {
       return NextResponse.json(
-        {
-          error: "Request not found or already processed",
-        },
+        { error: "Request not found or already processed" },
         { status: 404 }
       );
     }
 
-    // Prepare update data based on action
+    // Prepare update data
     const newStatus =
       validatedData.action === "ACCEPT" ? "ACCEPTED" : "REJECTED";
-    let updateData: any = {
-      status: newStatus,
-    };
 
-    let generatedOTP: number | null = null;
+    const updateData: Record<string, any> = { status: newStatus };
+
+    let generatedOTP: number | undefined;
 
     if (validatedData.action === "ACCEPT") {
-      // Generate OTP for accepted requests
       generatedOTP = generateOTP();
+      const equipmentArray = parseEquipment(validatedData.equipment ?? "");
 
-      // Parse equipment from comma-separated string to array
-      const equipmentArray = parseEquipment(validatedData.equipment || "");
-
-      updateData = {
-        ...updateData,
+      Object.assign(updateData, {
         MessageFromModerator: validatedData.message,
         location: validatedData.location,
         scheduledDate: new Date(validatedData.scheduledDate + "T00:00:00.000Z"),
         scheduledTime: validatedData.scheduledTime,
         equipment: equipmentArray,
         OTP: generatedOTP,
-      };
-    } else {
-      // REJECT: Only update message if provided
-      if (validatedData.message) {
-        updateData.MessageFromModerator = validatedData.message;
-      }
+      });
+    } else if (validatedData.message) {
+      updateData.MessageFromModerator = validatedData.message;
     }
 
-    console.log("💾 Updating request with data:", updateData);
-
-    // Update request with enhanced data
+    // Update the physical evaluation request
     const updatedRequest = await prisma.physicalEvaluationRequest.update({
       where: { id: requestId },
       data: updateData,
     });
 
-    console.log("✅ Request updated successfully:", updatedRequest);
-
-    // Create notification with enhanced message
-    const notificationType =
-      validatedData.action === "ACCEPT"
-        ? "STAT_UPDATE_APPROVED"
-        : "STAT_UPDATE_DENIED";
+    // Compose notification message
     const actionText =
       validatedData.action === "ACCEPT" ? "accepted" : "rejected";
-
     let notificationMessage = `${user.firstName} ${user.lastName} ${actionText} your evaluation request`;
 
     if (validatedData.action === "ACCEPT") {
@@ -164,13 +136,17 @@ export async function PUT(
       notificationMessage += `. Message: "${validatedData.message}"`;
     }
 
+    // Create a notification for the user
     await prisma.notification.create({
       data: {
         userId: evaluationRequest.user.id,
         actorId: user.id,
-        type: notificationType,
+        type:
+          validatedData.action === "ACCEPT"
+            ? "STAT_UPDATE_APPROVED"
+            : "STAT_UPDATE_DENIED",
         title: `Evaluation Request ${
-          actionText.charAt(0).toUpperCase() + actionText.slice(1)
+          actionText[0].toUpperCase() + actionText.slice(1)
         }`,
         message: notificationMessage,
         data: {
@@ -183,45 +159,37 @@ export async function PUT(
             scheduledDate: validatedData.scheduledDate,
             scheduledTime: validatedData.scheduledTime,
             otp: generatedOTP,
-            equipment: parseEquipment(validatedData.equipment || ""),
+            equipment: parseEquipment(validatedData.equipment ?? ""),
           }),
         },
       },
     });
 
-    console.log("📩 Notification created successfully");
-
-    // Prepare response
-    const response: any = {
+    // Construct response including OTP if accepted
+    const responsePayload: any = {
       success: true,
       request: updatedRequest,
       message: `Request ${actionText} successfully`,
     };
-
-    // Include OTP in response for accepted requests
-    if (validatedData.action === "ACCEPT" && generatedOTP) {
-      response.otp = generatedOTP;
+    if (generatedOTP) {
+      responsePayload.otp = generatedOTP;
     }
 
-    return NextResponse.json(response);
+    return NextResponse.json(responsePayload);
   } catch (error) {
-    console.error("❌ Error updating request:", error);
-
-    if (error instanceof z.ZodError) {
-      console.error("Validation errors:", error.issues);
+    // Handle Zod validation errors
+    if (error instanceof ZodError) {
       return NextResponse.json(
-        {
-          error: "Invalid request data",
-          details: error.issues,
-        },
+        { error: "Invalid request data", details: error.issues },
         { status: 400 }
       );
     }
 
+    // Log error for debugging (ideally replace with a proper logger)
+    console.error("Error updating request:", error);
+
     return NextResponse.json(
-      {
-        error: "Failed to update request",
-      },
+      { error: "Failed to update request" },
       { status: 500 }
     );
   }

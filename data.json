@@ -1,0 +1,2660 @@
+{
+  "id": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+  "userId": "cmhu922wy0000v0psb8e2at0q",
+  "height": 175,
+  "weight": 70,
+  "age": 25,
+  "bodyFat": 11.5,
+  "currentStrength": {
+    "id": "0f9aae9e-a11e-4de6-b100-0a0d7df788dd",
+    "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+    "testDate": "2025-11-14T02:45:16.986Z",
+    "athleteBodyWeight": 70,
+    "Countermovement_Jump": {
+      "attempts": [
+        {
+          "data": {
+            "jumpReach": 300,
+            "jumpHeight": 50,
+            "standingReach": 250
+          },
+          "notes": "good form",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Loaded_Squat_Jump": {
+      "attempts": [
+        {
+          "data": {
+            "load": 20,
+            "jumpReach": 298,
+            "flightTime": 0.65,
+            "jumpHeight": 48,
+            "standingReach": 250
+          },
+          "notes": "",
+          "attemptNumber": 1
+        }
+      ],
+      "bodyWeight": 70
+    },
+    "Depth_Jump": {
+      "attempts": [
+        {
+          "data": {
+            "jumpReach": 295,
+            "dropHeight": 40,
+            "jumpHeight": 45,
+            "standingReach": 250
+          },
+          "notes": "quick dropped",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Ballistic_Bench_Press": {
+      "attempts": [
+        {
+          "data": {
+            "load": 80,
+            "reps": 25,
+            "timeLimit": 120,
+            "completedInTime": true
+          },
+          "notes": "strong start.",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Push_Up": {
+      "attempts": [
+        {
+          "data": {
+            "reps": 45,
+            "timeLimit": 60,
+            "formQuality": "standard"
+          },
+          "notes": "maintained form",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Ballistic_Push_Up": {
+      "attempts": [
+        {
+          "data": {
+            "load": 0,
+            "reps": 30,
+            "timeUsed": 115
+          },
+          "notes": "",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Deadlift_Velocity": {
+      "maxLoad": 160,
+      "attempts": [
+        {
+          "data": {
+            "load": 160,
+            "reps": 1,
+            "repDuration": 2.3
+          },
+          "notes": "smooth rep",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Barbell_Hip_Thrust": {
+      "sets": [
+        {
+          "load": 100,
+          "reps": 8,
+          "restAfter": 60
+        }
+      ],
+      "maxLoad": 100,
+      "totalReps": 8,
+      "totalTimeUsed": 60
+    },
+    "Weighted_Pull_up": {
+      "sets": [
+        {
+          "load": 10,
+          "reps": 2,
+          "restAfter": 60
+        }
+      ],
+      "maxLoad": 10,
+      "totalReps": 2,
+      "bodyWeight": 70,
+      "totalTimeUsed": 60
+    },
+    "Barbell_Row": {
+      "maxLoad": 80,
+      "attempts": [
+        {
+          "data": {
+            "load": 80,
+            "reps": 10,
+            "formQuality": "strict"
+          },
+          "notes": "",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Plank_Hold": {
+      "attempts": [
+        {
+          "data": {
+            "load": 0,
+            "duration": 120,
+            "formBreakdown": false
+          },
+          "notes": "",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "pullUps": {
+      "attempts": [
+        {
+          "data": {
+            "reps": 20,
+            "timeUsed": 180,
+            "timeLimit": 300,
+            "formQuality": "strict"
+          },
+          "notes": "",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Pushups": null,
+    "muscleMass": 58.6,
+    "enduranceStrength": 49.4,
+    "explosivePower": 72.9,
+    "createdAt": "2025-11-14T02:45:16.986Z",
+    "updatedAt": "2025-11-14T02:45:16.986Z"
+  },
+  "currentSpeed": {
+    "id": "f28802c2-06a3-42b4-b736-fcedf5fbc1ee",
+    "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+    "sprintSpeed": 79.3,
+    "Ten_Meter_Sprint": {
+      "attempts": [
+        {
+          "notes": "Personel best",
+          "sprintTime": 1.85,
+          "attemptNumber": 1,
+          "standingLongJump": 240
+        }
+      ],
+      "bestTime": 1.85,
+      "meanTime": 1.85,
+      "anthropometricData": {
+        "armSpan": 180,
+        "calfGirth": 38,
+        "footLength": 27,
+        "thighGirth": 55
+      }
+    },
+    "Fourty_Meter_Dash": {
+      "attempts": [
+        {
+          "notes": "Good start",
+          "attemptNumber": 1,
+          "totalTime_0_40m": 5.12
+        }
+      ],
+      "bestTime": 5.12,
+      "meanTime": 5.12
+    },
+    "Repeated_Sprint_Ability": {
+      "bestTime": 4.32,
+      "meanTime": 5.53,
+      "totalTime": 33.19,
+      "worstTime": 6.32,
+      "sprintTimes": [4.32, 4.32, 5.61, 6.32, 6.32, 6.3],
+      "fatigueIndex": 46.3,
+      "restInterval": 20,
+      "percentDecrement": -28
+    },
+    "Five_0_Five_Agility_Test": {
+      "attempts": [
+        {
+          "notes": "Stronger Turn",
+          "leftTurnTime": 2.45,
+          "attemptNumber": 1,
+          "rightTurnTime": 2.51
+        }
+      ],
+      "bestLeftTime": 2.45,
+      "meanLeftTime": 2.45,
+      "bestRightTime": 2.51,
+      "meanRightTime": 2.51,
+      "asymmetryIndex": 0.06
+    },
+    "T_Test": {
+      "attempts": [
+        {
+          "notes": "Lost balance",
+          "attemptNumber": 1,
+          "completionTime": 10.52
+        }
+      ],
+      "bestTime": 10.52,
+      "meanTime": 10.52
+    },
+    "Illinois_Agility_Test": {
+      "attempts": [
+        {
+          "notes": "Smooth",
+          "attemptNumber": 1,
+          "completionTime": 15.37
+        }
+      ],
+      "bestTime": 15.37,
+      "meanTime": 15.37
+    },
+    "Visual_Reaction_Speed_Drill": {
+      "attempts": [
+        {
+          "notes": "perfect score",
+          "stimulus": "visual",
+          "reactionTime": 245,
+          "attemptNumber": 1
+        }
+      ],
+      "bestReactionTime": 245,
+      "meanReactionTime": 245
+    },
+    "Long_Jump": {
+      "attempts": [
+        {
+          "notes": "Good take off",
+          "distance": 520,
+          "runupSteps": 12,
+          "attemptNumber": 1
+        }
+      ],
+      "bestDistance": 520,
+      "meanDistance": 520
+    },
+    "Reactive_Agility_T_Test": {
+      "attempts": [
+        {
+          "notes": "Excelent reaction",
+          "attemptNumber": 1,
+          "completionTime": 11.25,
+          "correctResponseRate": 93
+        }
+      ],
+      "bestTime": 11.25,
+      "meanTime": 11.25,
+      "averageAccuracy": 93
+    },
+    "Standing_Long_Jump": {
+      "attempts": [
+        {
+          "notes": "Good",
+          "distance": 240,
+          "attemptNumber": 1
+        }
+      ],
+      "bestDistance": 240,
+      "meanDistance": 240
+    },
+    "acceleration": {
+      "score": 86
+    },
+    "agility": {
+      "score": 0
+    },
+    "reactionTime": {
+      "score": 0
+    },
+    "balance": {
+      "score": 0
+    },
+    "coordination": {
+      "score": 0
+    },
+    "createdAt": "2025-11-14T02:45:17.154Z",
+    "updatedAt": "2025-11-14T02:45:17.154Z"
+  },
+  "currentStamina": {
+    "id": "0cabc54d-23a6-42cc-937e-8f592b327c46",
+    "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+    "vo2Max": 30.3,
+    "flexibility": 8.5,
+    "overallFlexibilityScore": 81,
+    "cardiovascularFitnessScore": 66,
+    "recoveryEfficiencyScore": 100,
+    "anthropometricData": null,
+    "Beep_Test": {
+      "attempts": [
+        {
+          "notes": "",
+          "testDate": "2025-11-14",
+          "finalLevel": 1,
+          "finalShuttle": 1,
+          "attemptNumber": 1
+        }
+      ],
+      "bestAttempt": 0,
+      "calculatedVO2Max": 30.3,
+      "estimatedDistance": 20
+    },
+    "Yo_Yo_Test": null,
+    "Cooper_Test": {
+      "attempts": [
+        {
+          "notes": "",
+          "testDate": "2025-11-14",
+          "surfaceType": "track",
+          "attemptNumber": 1,
+          "distanceCovered": 2650,
+          "weatherConditions": ""
+        }
+      ],
+      "bestAttempt": 0,
+      "averageDistance": 2650,
+      "calculatedVO2Max": 48
+    },
+    "Peak_Heart_Rate": {
+      "entries": [
+        {
+          "notes": "",
+          "peakHR": 192,
+          "inputMethod": "device",
+          "activityType": "spring training ",
+          "recordedDate": "2025-11-14",
+          "perceivedExertion": 9
+        }
+      ],
+      "maxRecordedHR": 192,
+      "trainingZones": {
+        "zone1": [96, 115],
+        "zone2": [115, 134],
+        "zone3": [134, 154],
+        "zone4": [154, 173],
+        "zone5": [173, 192]
+      },
+      "estimatedMaxHR": 195
+    },
+    "Resting_Heart_Rate": {
+      "attempts": [
+        {
+          "notes": "just woke up",
+          "timeOfDay": "afternoon",
+          "inputMethod": "device",
+          "heartRateBPM": 62,
+          "attemptNumber": 1,
+          "measurementDate": "2025-11-14"
+        }
+      ],
+      "lowestRHR": 62,
+      "averageRHR": 62,
+      "cardiovascularFitnessRating": "Good"
+    },
+    "Resting_Heart_Rate_Variability": null,
+    "Lactate_Threshold": null,
+    "Anaerobic_Capacity": null,
+    "Post_Exercise_Heart_Rate_Recovery": {
+      "attempts": [
+        {
+          "notes": "",
+          "peakHR": 145,
+          "testDate": "2025-11-14",
+          "restingHR": 65,
+          "inputMethod": "device",
+          "attemptNumber": 1,
+          "recovery1MinHR": 112,
+          "recovery2MinHR": 96,
+          "recovery3MinHR": 80,
+          "exerciseProtocol": "step-test-3min"
+        }
+      ],
+      "averageRecoveryRate": 33,
+      "bestRecoveryAttempt": 0,
+      "recoveryEfficiencyScore": 100
+    },
+    "Sit_and_Reach_Test": {
+      "attempts": [
+        {
+          "notes": "",
+          "attemptNumber": 1,
+          "reachDistance": 8.5
+        }
+      ],
+      "bestReach": 8.5,
+      "averageReach": 8.5,
+      "flexibilityScore": 77
+    },
+    "Active_Straight_Leg_Raise": {
+      "attempts": [
+        {
+          "notes": "",
+          "leftLegAngle": 75,
+          "attemptNumber": 1,
+          "rightLegAngle": 78
+        }
+      ],
+      "bestLeftAngle": 75,
+      "asymmetryScore": 3,
+      "bestRightAngle": 78,
+      "flexibilityScore": 87
+    },
+    "Shoulder_External_Internal_Rotation": {
+      "attempts": [
+        {
+          "notes": "",
+          "gripWidth": 75,
+          "attemptNumber": 1
+        }
+      ],
+      "bestGripWidth": 75,
+      "anthropometricData": {
+        "armSpan": 178,
+        "shoulderWidth": 42
+      },
+      "shoulderMobilityScore": 69
+    },
+    "Knee_to_Wall_Test": {
+      "attempts": [
+        {
+          "notes": "right ankle",
+          "attemptNumber": 1,
+          "leftFootDistance": 10.5,
+          "rightFootDistance": 9
+        }
+      ],
+      "asymmetryScore": 1.5,
+      "bestLeftDistance": 10.5,
+      "bestRightDistance": 9,
+      "ankleMobilityScore": 89
+    },
+    "recoveryTime": 30,
+    "createdAt": "2025-11-14T02:45:17.315Z",
+    "updatedAt": "2025-11-14T02:45:17.315Z"
+  },
+  "activeInjuries": [],
+  "strength": {
+    "id": "0f9aae9e-a11e-4de6-b100-0a0d7df788dd",
+    "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+    "testDate": "2025-11-14T02:45:16.986Z",
+    "athleteBodyWeight": 70,
+    "Countermovement_Jump": {
+      "attempts": [
+        {
+          "data": {
+            "jumpReach": 300,
+            "jumpHeight": 50,
+            "standingReach": 250
+          },
+          "notes": "good form",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Loaded_Squat_Jump": {
+      "attempts": [
+        {
+          "data": {
+            "load": 20,
+            "jumpReach": 298,
+            "flightTime": 0.65,
+            "jumpHeight": 48,
+            "standingReach": 250
+          },
+          "notes": "",
+          "attemptNumber": 1
+        }
+      ],
+      "bodyWeight": 70
+    },
+    "Depth_Jump": {
+      "attempts": [
+        {
+          "data": {
+            "jumpReach": 295,
+            "dropHeight": 40,
+            "jumpHeight": 45,
+            "standingReach": 250
+          },
+          "notes": "quick dropped",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Ballistic_Bench_Press": {
+      "attempts": [
+        {
+          "data": {
+            "load": 80,
+            "reps": 25,
+            "timeLimit": 120,
+            "completedInTime": true
+          },
+          "notes": "strong start.",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Push_Up": {
+      "attempts": [
+        {
+          "data": {
+            "reps": 45,
+            "timeLimit": 60,
+            "formQuality": "standard"
+          },
+          "notes": "maintained form",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Ballistic_Push_Up": {
+      "attempts": [
+        {
+          "data": {
+            "load": 0,
+            "reps": 30,
+            "timeUsed": 115
+          },
+          "notes": "",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Deadlift_Velocity": {
+      "maxLoad": 160,
+      "attempts": [
+        {
+          "data": {
+            "load": 160,
+            "reps": 1,
+            "repDuration": 2.3
+          },
+          "notes": "smooth rep",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Barbell_Hip_Thrust": {
+      "sets": [
+        {
+          "load": 100,
+          "reps": 8,
+          "restAfter": 60
+        }
+      ],
+      "maxLoad": 100,
+      "totalReps": 8,
+      "totalTimeUsed": 60
+    },
+    "Weighted_Pull_up": {
+      "sets": [
+        {
+          "load": 10,
+          "reps": 2,
+          "restAfter": 60
+        }
+      ],
+      "maxLoad": 10,
+      "totalReps": 2,
+      "bodyWeight": 70,
+      "totalTimeUsed": 60
+    },
+    "Barbell_Row": {
+      "maxLoad": 80,
+      "attempts": [
+        {
+          "data": {
+            "load": 80,
+            "reps": 10,
+            "formQuality": "strict"
+          },
+          "notes": "",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Plank_Hold": {
+      "attempts": [
+        {
+          "data": {
+            "load": 0,
+            "duration": 120,
+            "formBreakdown": false
+          },
+          "notes": "",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "pullUps": {
+      "attempts": [
+        {
+          "data": {
+            "reps": 20,
+            "timeUsed": 180,
+            "timeLimit": 300,
+            "formQuality": "strict"
+          },
+          "notes": "",
+          "attemptNumber": 1
+        }
+      ]
+    },
+    "Pushups": null,
+    "muscleMass": 58.6,
+    "enduranceStrength": 49.4,
+    "explosivePower": 72.9,
+    "createdAt": "2025-11-14T02:45:16.986Z",
+    "updatedAt": "2025-11-14T02:45:16.986Z"
+  },
+  "speed": {
+    "id": "f28802c2-06a3-42b4-b736-fcedf5fbc1ee",
+    "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+    "sprintSpeed": 79.3,
+    "Ten_Meter_Sprint": {
+      "attempts": [
+        {
+          "notes": "Personel best",
+          "sprintTime": 1.85,
+          "attemptNumber": 1,
+          "standingLongJump": 240
+        }
+      ],
+      "bestTime": 1.85,
+      "meanTime": 1.85,
+      "anthropometricData": {
+        "armSpan": 180,
+        "calfGirth": 38,
+        "footLength": 27,
+        "thighGirth": 55
+      }
+    },
+    "Fourty_Meter_Dash": {
+      "attempts": [
+        {
+          "notes": "Good start",
+          "attemptNumber": 1,
+          "totalTime_0_40m": 5.12
+        }
+      ],
+      "bestTime": 5.12,
+      "meanTime": 5.12
+    },
+    "Repeated_Sprint_Ability": {
+      "bestTime": 4.32,
+      "meanTime": 5.53,
+      "totalTime": 33.19,
+      "worstTime": 6.32,
+      "sprintTimes": [4.32, 4.32, 5.61, 6.32, 6.32, 6.3],
+      "fatigueIndex": 46.3,
+      "restInterval": 20,
+      "percentDecrement": -28
+    },
+    "Five_0_Five_Agility_Test": {
+      "attempts": [
+        {
+          "notes": "Stronger Turn",
+          "leftTurnTime": 2.45,
+          "attemptNumber": 1,
+          "rightTurnTime": 2.51
+        }
+      ],
+      "bestLeftTime": 2.45,
+      "meanLeftTime": 2.45,
+      "bestRightTime": 2.51,
+      "meanRightTime": 2.51,
+      "asymmetryIndex": 0.06
+    },
+    "T_Test": {
+      "attempts": [
+        {
+          "notes": "Lost balance",
+          "attemptNumber": 1,
+          "completionTime": 10.52
+        }
+      ],
+      "bestTime": 10.52,
+      "meanTime": 10.52
+    },
+    "Illinois_Agility_Test": {
+      "attempts": [
+        {
+          "notes": "Smooth",
+          "attemptNumber": 1,
+          "completionTime": 15.37
+        }
+      ],
+      "bestTime": 15.37,
+      "meanTime": 15.37
+    },
+    "Visual_Reaction_Speed_Drill": {
+      "attempts": [
+        {
+          "notes": "perfect score",
+          "stimulus": "visual",
+          "reactionTime": 245,
+          "attemptNumber": 1
+        }
+      ],
+      "bestReactionTime": 245,
+      "meanReactionTime": 245
+    },
+    "Long_Jump": {
+      "attempts": [
+        {
+          "notes": "Good take off",
+          "distance": 520,
+          "runupSteps": 12,
+          "attemptNumber": 1
+        }
+      ],
+      "bestDistance": 520,
+      "meanDistance": 520
+    },
+    "Reactive_Agility_T_Test": {
+      "attempts": [
+        {
+          "notes": "Excelent reaction",
+          "attemptNumber": 1,
+          "completionTime": 11.25,
+          "correctResponseRate": 93
+        }
+      ],
+      "bestTime": 11.25,
+      "meanTime": 11.25,
+      "averageAccuracy": 93
+    },
+    "Standing_Long_Jump": {
+      "attempts": [
+        {
+          "notes": "Good",
+          "distance": 240,
+          "attemptNumber": 1
+        }
+      ],
+      "bestDistance": 240,
+      "meanDistance": 240
+    },
+    "acceleration": {
+      "score": 86
+    },
+    "agility": {
+      "score": 0
+    },
+    "reactionTime": {
+      "score": 0
+    },
+    "balance": {
+      "score": 0
+    },
+    "coordination": {
+      "score": 0
+    },
+    "createdAt": "2025-11-14T02:45:17.154Z",
+    "updatedAt": "2025-11-14T02:45:17.154Z"
+  },
+  "stamina": {
+    "id": "0cabc54d-23a6-42cc-937e-8f592b327c46",
+    "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+    "vo2Max": 30.3,
+    "flexibility": 8.5,
+    "overallFlexibilityScore": 81,
+    "cardiovascularFitnessScore": 66,
+    "recoveryEfficiencyScore": 100,
+    "anthropometricData": null,
+    "Beep_Test": {
+      "attempts": [
+        {
+          "notes": "",
+          "testDate": "2025-11-14",
+          "finalLevel": 1,
+          "finalShuttle": 1,
+          "attemptNumber": 1
+        }
+      ],
+      "bestAttempt": 0,
+      "calculatedVO2Max": 30.3,
+      "estimatedDistance": 20
+    },
+    "Yo_Yo_Test": null,
+    "Cooper_Test": {
+      "attempts": [
+        {
+          "notes": "",
+          "testDate": "2025-11-14",
+          "surfaceType": "track",
+          "attemptNumber": 1,
+          "distanceCovered": 2650,
+          "weatherConditions": ""
+        }
+      ],
+      "bestAttempt": 0,
+      "averageDistance": 2650,
+      "calculatedVO2Max": 48
+    },
+    "Peak_Heart_Rate": {
+      "entries": [
+        {
+          "notes": "",
+          "peakHR": 192,
+          "inputMethod": "device",
+          "activityType": "spring training ",
+          "recordedDate": "2025-11-14",
+          "perceivedExertion": 9
+        }
+      ],
+      "maxRecordedHR": 192,
+      "trainingZones": {
+        "zone1": [96, 115],
+        "zone2": [115, 134],
+        "zone3": [134, 154],
+        "zone4": [154, 173],
+        "zone5": [173, 192]
+      },
+      "estimatedMaxHR": 195
+    },
+    "Resting_Heart_Rate": {
+      "attempts": [
+        {
+          "notes": "just woke up",
+          "timeOfDay": "afternoon",
+          "inputMethod": "device",
+          "heartRateBPM": 62,
+          "attemptNumber": 1,
+          "measurementDate": "2025-11-14"
+        }
+      ],
+      "lowestRHR": 62,
+      "averageRHR": 62,
+      "cardiovascularFitnessRating": "Good"
+    },
+    "Resting_Heart_Rate_Variability": null,
+    "Lactate_Threshold": null,
+    "Anaerobic_Capacity": null,
+    "Post_Exercise_Heart_Rate_Recovery": {
+      "attempts": [
+        {
+          "notes": "",
+          "peakHR": 145,
+          "testDate": "2025-11-14",
+          "restingHR": 65,
+          "inputMethod": "device",
+          "attemptNumber": 1,
+          "recovery1MinHR": 112,
+          "recovery2MinHR": 96,
+          "recovery3MinHR": 80,
+          "exerciseProtocol": "step-test-3min"
+        }
+      ],
+      "averageRecoveryRate": 33,
+      "bestRecoveryAttempt": 0,
+      "recoveryEfficiencyScore": 100
+    },
+    "Sit_and_Reach_Test": {
+      "attempts": [
+        {
+          "notes": "",
+          "attemptNumber": 1,
+          "reachDistance": 8.5
+        }
+      ],
+      "bestReach": 8.5,
+      "averageReach": 8.5,
+      "flexibilityScore": 77
+    },
+    "Active_Straight_Leg_Raise": {
+      "attempts": [
+        {
+          "notes": "",
+          "leftLegAngle": 75,
+          "attemptNumber": 1,
+          "rightLegAngle": 78
+        }
+      ],
+      "bestLeftAngle": 75,
+      "asymmetryScore": 3,
+      "bestRightAngle": 78,
+      "flexibilityScore": 87
+    },
+    "Shoulder_External_Internal_Rotation": {
+      "attempts": [
+        {
+          "notes": "",
+          "gripWidth": 75,
+          "attemptNumber": 1
+        }
+      ],
+      "bestGripWidth": 75,
+      "anthropometricData": {
+        "armSpan": 178,
+        "shoulderWidth": 42
+      },
+      "shoulderMobilityScore": 69
+    },
+    "Knee_to_Wall_Test": {
+      "attempts": [
+        {
+          "notes": "right ankle",
+          "attemptNumber": 1,
+          "leftFootDistance": 10.5,
+          "rightFootDistance": 9
+        }
+      ],
+      "asymmetryScore": 1.5,
+      "bestLeftDistance": 10.5,
+      "bestRightDistance": 9,
+      "ankleMobilityScore": 89
+    },
+    "recoveryTime": 30,
+    "createdAt": "2025-11-14T02:45:17.315Z",
+    "updatedAt": "2025-11-14T02:45:17.315Z"
+  },
+  "injuries": [],
+  "strengthHistory": [
+    {
+      "id": "0f9aae9e-a11e-4de6-b100-0a0d7df788dd",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "testDate": "2025-11-14T02:45:16.986Z",
+      "athleteBodyWeight": 70,
+      "Countermovement_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "jumpReach": 300,
+              "jumpHeight": 50,
+              "standingReach": 250
+            },
+            "notes": "good form",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Loaded_Squat_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "load": 20,
+              "jumpReach": 298,
+              "flightTime": 0.65,
+              "jumpHeight": 48,
+              "standingReach": 250
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ],
+        "bodyWeight": 70
+      },
+      "Depth_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "jumpReach": 295,
+              "dropHeight": 40,
+              "jumpHeight": 45,
+              "standingReach": 250
+            },
+            "notes": "quick dropped",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Ballistic_Bench_Press": {
+        "attempts": [
+          {
+            "data": {
+              "load": 80,
+              "reps": 25,
+              "timeLimit": 120,
+              "completedInTime": true
+            },
+            "notes": "strong start.",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Push_Up": {
+        "attempts": [
+          {
+            "data": {
+              "reps": 45,
+              "timeLimit": 60,
+              "formQuality": "standard"
+            },
+            "notes": "maintained form",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Ballistic_Push_Up": {
+        "attempts": [
+          {
+            "data": {
+              "load": 0,
+              "reps": 30,
+              "timeUsed": 115
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Deadlift_Velocity": {
+        "maxLoad": 160,
+        "attempts": [
+          {
+            "data": {
+              "load": 160,
+              "reps": 1,
+              "repDuration": 2.3
+            },
+            "notes": "smooth rep",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Barbell_Hip_Thrust": {
+        "sets": [
+          {
+            "load": 100,
+            "reps": 8,
+            "restAfter": 60
+          }
+        ],
+        "maxLoad": 100,
+        "totalReps": 8,
+        "totalTimeUsed": 60
+      },
+      "Weighted_Pull_up": {
+        "sets": [
+          {
+            "load": 10,
+            "reps": 2,
+            "restAfter": 60
+          }
+        ],
+        "maxLoad": 10,
+        "totalReps": 2,
+        "bodyWeight": 70,
+        "totalTimeUsed": 60
+      },
+      "Barbell_Row": {
+        "maxLoad": 80,
+        "attempts": [
+          {
+            "data": {
+              "load": 80,
+              "reps": 10,
+              "formQuality": "strict"
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Plank_Hold": {
+        "attempts": [
+          {
+            "data": {
+              "load": 0,
+              "duration": 120,
+              "formBreakdown": false
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "pullUps": {
+        "attempts": [
+          {
+            "data": {
+              "reps": 20,
+              "timeUsed": 180,
+              "timeLimit": 300,
+              "formQuality": "strict"
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Pushups": null,
+      "muscleMass": 58.6,
+      "enduranceStrength": 49.4,
+      "explosivePower": 72.9,
+      "createdAt": "2025-11-14T02:45:16.986Z",
+      "updatedAt": "2025-11-14T02:45:16.986Z"
+    },
+    {
+      "id": "f1de1c48-0972-45cc-a2a2-b29d43ea4222",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "testDate": "2025-11-13T11:10:55.250Z",
+      "athleteBodyWeight": 70,
+      "Countermovement_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "jumpReach": 300,
+              "jumpHeight": 60,
+              "standingReach": 240
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Loaded_Squat_Jump": null,
+      "Depth_Jump": null,
+      "Ballistic_Bench_Press": null,
+      "Push_Up": null,
+      "Ballistic_Push_Up": null,
+      "Deadlift_Velocity": null,
+      "Barbell_Hip_Thrust": null,
+      "Weighted_Pull_up": null,
+      "Barbell_Row": null,
+      "Plank_Hold": null,
+      "pullUps": null,
+      "Pushups": null,
+      "muscleMass": 0,
+      "enduranceStrength": 0,
+      "explosivePower": 85.7,
+      "createdAt": "2025-11-13T11:10:55.250Z",
+      "updatedAt": "2025-11-13T11:10:55.250Z"
+    },
+    {
+      "id": "5ba3c5d2-ee6c-4bde-9e31-5f1906a5e013",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "testDate": "2025-11-13T06:37:36.896Z",
+      "athleteBodyWeight": 70,
+      "Countermovement_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "jumpReach": 300,
+              "jumpHeight": 60,
+              "standingReach": 240
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Loaded_Squat_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "load": 20,
+              "jumpReach": 285,
+              "flightTime": 0.65,
+              "jumpHeight": 35,
+              "standingReach": 250
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ],
+        "bodyWeight": 70
+      },
+      "Depth_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "jumpReach": 295,
+              "dropHeight": 40,
+              "jumpHeight": 55,
+              "standingReach": 240
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Ballistic_Bench_Press": {
+        "attempts": [
+          {
+            "data": {
+              "load": 60,
+              "reps": 25,
+              "timeLimit": 120,
+              "completedInTime": true
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Push_Up": {
+        "attempts": [
+          {
+            "data": {
+              "reps": 45,
+              "timeLimit": 60,
+              "formQuality": "standard"
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Ballistic_Push_Up": {
+        "attempts": [
+          {
+            "data": {
+              "load": 2,
+              "reps": 30,
+              "timeUsed": 115
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Deadlift_Velocity": {
+        "maxLoad": 150,
+        "attempts": [
+          {
+            "data": {
+              "load": 150,
+              "reps": 1,
+              "repDuration": 2.29
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ],
+        "maxLoadAttempt": 0
+      },
+      "Barbell_Hip_Thrust": {
+        "sets": [
+          {
+            "load": 100,
+            "reps": 8,
+            "restAfter": 60
+          }
+        ],
+        "maxLoad": 100,
+        "totalReps": 8,
+        "totalTimeUsed": 60
+      },
+      "Weighted_Pull_up": {
+        "sets": [
+          {
+            "load": 10,
+            "reps": 5,
+            "restAfter": 120
+          }
+        ],
+        "maxLoad": 10,
+        "totalReps": 5,
+        "bodyWeight": 70,
+        "totalTimeUsed": 120
+      },
+      "Barbell_Row": {
+        "maxLoad": 60,
+        "attempts": [
+          {
+            "data": {
+              "load": 60,
+              "reps": 10,
+              "formQuality": "strict"
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Plank_Hold": {
+        "attempts": [
+          {
+            "data": {
+              "load": 10,
+              "duration": 120,
+              "formBreakdown": false
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "pullUps": {
+        "attempts": [
+          {
+            "data": {
+              "reps": 20,
+              "timeUsed": 180,
+              "timeLimit": 300,
+              "formQuality": "strict"
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Pushups": null,
+      "muscleMass": 52.4,
+      "enduranceStrength": 49.4,
+      "explosivePower": 72.3,
+      "createdAt": "2025-11-13T06:37:36.896Z",
+      "updatedAt": "2025-11-13T06:37:36.896Z"
+    },
+    {
+      "id": "5b4ff904-e884-4dd1-9ad9-9e73943f0af7",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "testDate": "2025-11-12T19:03:28.756Z",
+      "athleteBodyWeight": 70,
+      "Countermovement_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "jumpReach": 299.8,
+              "jumpHeight": 59.80000000000001,
+              "standingReach": 240
+            },
+            "notes": "feltgood",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Loaded_Squat_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "load": 20,
+              "jumpReach": 285,
+              "flightTime": 0.65,
+              "jumpHeight": 45,
+              "standingReach": 240
+            },
+            "notes": "good posture",
+            "attemptNumber": 1
+          }
+        ],
+        "bodyWeight": 70
+      },
+      "Depth_Jump": null,
+      "Ballistic_Bench_Press": null,
+      "Push_Up": null,
+      "Ballistic_Push_Up": null,
+      "Deadlift_Velocity": null,
+      "Barbell_Hip_Thrust": null,
+      "Weighted_Pull_up": {
+        "sets": [
+          {
+            "load": 10,
+            "reps": 5,
+            "restAfter": 60
+          }
+        ],
+        "maxLoad": 10,
+        "totalReps": 5,
+        "bodyWeight": 70,
+        "totalTimeUsed": 60
+      },
+      "Barbell_Row": {
+        "maxLoad": 60,
+        "attempts": [
+          {
+            "data": {
+              "load": 60,
+              "reps": 10,
+              "formQuality": "strict"
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Plank_Hold": {
+        "attempts": [
+          {
+            "data": {
+              "load": 0,
+              "duration": 120,
+              "formBreakdown": true
+            },
+            "notes": "hips droped at 90 sec",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "pullUps": {
+        "attempts": [
+          {
+            "data": {
+              "reps": 20,
+              "timeUsed": 180,
+              "timeLimit": 300,
+              "formQuality": "strict"
+            },
+            "notes": "Strict form",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Pushups": null,
+      "muscleMass": 38.1,
+      "enduranceStrength": 53.3,
+      "explosivePower": 71.6,
+      "createdAt": "2025-11-12T19:03:28.756Z",
+      "updatedAt": "2025-11-12T19:03:28.756Z"
+    },
+    {
+      "id": "0ddba097-c365-4b8d-a2ba-446127da08f6",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "testDate": "2025-11-12T15:28:52.716Z",
+      "athleteBodyWeight": 70,
+      "Countermovement_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "jumpReach": 300,
+              "jumpHeight": 60,
+              "standingReach": 240
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Loaded_Squat_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "load": 20,
+              "jumpReach": 285,
+              "flightTime": 0.63,
+              "jumpHeight": 45,
+              "standingReach": 240
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ],
+        "bodyWeight": 70
+      },
+      "Depth_Jump": {
+        "attempts": [
+          {
+            "data": {
+              "jumpReach": 295,
+              "dropHeight": 37,
+              "jumpHeight": 55,
+              "standingReach": 240
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Ballistic_Bench_Press": {
+        "attempts": [
+          {
+            "data": {
+              "load": 60,
+              "reps": 25,
+              "timeLimit": 120,
+              "completedInTime": true
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Push_Up": {
+        "attempts": [
+          {
+            "data": {
+              "reps": 45,
+              "timeLimit": 60,
+              "formQuality": "standard"
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Ballistic_Push_Up": {
+        "attempts": [
+          {
+            "data": {
+              "load": 0,
+              "reps": 30,
+              "timeUsed": 115
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Deadlift_Velocity": null,
+      "Barbell_Hip_Thrust": null,
+      "Weighted_Pull_up": {
+        "sets": [
+          {
+            "load": 2.5,
+            "reps": 3,
+            "restAfter": 60
+          }
+        ],
+        "maxLoad": 2.5,
+        "totalReps": 3,
+        "bodyWeight": 70,
+        "totalTimeUsed": 60
+      },
+      "Barbell_Row": {
+        "maxLoad": 60,
+        "attempts": [
+          {
+            "data": {
+              "load": 60,
+              "reps": 10,
+              "formQuality": "strict"
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Plank_Hold": {
+        "attempts": [
+          {
+            "data": {
+              "load": 0,
+              "duration": 120,
+              "formBreakdown": true
+            },
+            "notes": "",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "pullUps": {
+        "attempts": [
+          {
+            "data": {
+              "reps": 20,
+              "timeUsed": 180,
+              "timeLimit": 300,
+              "formQuality": "kipping"
+            },
+            "notes": "strict form",
+            "attemptNumber": 1
+          }
+        ]
+      },
+      "Pushups": null,
+      "muscleMass": 31,
+      "enduranceStrength": 60.6,
+      "explosivePower": 75.5,
+      "createdAt": "2025-11-12T15:28:52.716Z",
+      "updatedAt": "2025-11-12T15:28:52.716Z"
+    }
+  ],
+  "speedHistory": [
+    {
+      "id": "f28802c2-06a3-42b4-b736-fcedf5fbc1ee",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "sprintSpeed": 79.3,
+      "Ten_Meter_Sprint": {
+        "attempts": [
+          {
+            "notes": "Personel best",
+            "sprintTime": 1.85,
+            "attemptNumber": 1,
+            "standingLongJump": 240
+          }
+        ],
+        "bestTime": 1.85,
+        "meanTime": 1.85,
+        "anthropometricData": {
+          "armSpan": 180,
+          "calfGirth": 38,
+          "footLength": 27,
+          "thighGirth": 55
+        }
+      },
+      "Fourty_Meter_Dash": {
+        "attempts": [
+          {
+            "notes": "Good start",
+            "attemptNumber": 1,
+            "totalTime_0_40m": 5.12
+          }
+        ],
+        "bestTime": 5.12,
+        "meanTime": 5.12
+      },
+      "Repeated_Sprint_Ability": {
+        "bestTime": 4.32,
+        "meanTime": 5.53,
+        "totalTime": 33.19,
+        "worstTime": 6.32,
+        "sprintTimes": [4.32, 4.32, 5.61, 6.32, 6.32, 6.3],
+        "fatigueIndex": 46.3,
+        "restInterval": 20,
+        "percentDecrement": -28
+      },
+      "Five_0_Five_Agility_Test": {
+        "attempts": [
+          {
+            "notes": "Stronger Turn",
+            "leftTurnTime": 2.45,
+            "attemptNumber": 1,
+            "rightTurnTime": 2.51
+          }
+        ],
+        "bestLeftTime": 2.45,
+        "meanLeftTime": 2.45,
+        "bestRightTime": 2.51,
+        "meanRightTime": 2.51,
+        "asymmetryIndex": 0.06
+      },
+      "T_Test": {
+        "attempts": [
+          {
+            "notes": "Lost balance",
+            "attemptNumber": 1,
+            "completionTime": 10.52
+          }
+        ],
+        "bestTime": 10.52,
+        "meanTime": 10.52
+      },
+      "Illinois_Agility_Test": {
+        "attempts": [
+          {
+            "notes": "Smooth",
+            "attemptNumber": 1,
+            "completionTime": 15.37
+          }
+        ],
+        "bestTime": 15.37,
+        "meanTime": 15.37
+      },
+      "Visual_Reaction_Speed_Drill": {
+        "attempts": [
+          {
+            "notes": "perfect score",
+            "stimulus": "visual",
+            "reactionTime": 245,
+            "attemptNumber": 1
+          }
+        ],
+        "bestReactionTime": 245,
+        "meanReactionTime": 245
+      },
+      "Long_Jump": {
+        "attempts": [
+          {
+            "notes": "Good take off",
+            "distance": 520,
+            "runupSteps": 12,
+            "attemptNumber": 1
+          }
+        ],
+        "bestDistance": 520,
+        "meanDistance": 520
+      },
+      "Reactive_Agility_T_Test": {
+        "attempts": [
+          {
+            "notes": "Excelent reaction",
+            "attemptNumber": 1,
+            "completionTime": 11.25,
+            "correctResponseRate": 93
+          }
+        ],
+        "bestTime": 11.25,
+        "meanTime": 11.25,
+        "averageAccuracy": 93
+      },
+      "Standing_Long_Jump": {
+        "attempts": [
+          {
+            "notes": "Good",
+            "distance": 240,
+            "attemptNumber": 1
+          }
+        ],
+        "bestDistance": 240,
+        "meanDistance": 240
+      },
+      "acceleration": {
+        "score": 86
+      },
+      "agility": {
+        "score": 0
+      },
+      "reactionTime": {
+        "score": 0
+      },
+      "balance": {
+        "score": 0
+      },
+      "coordination": {
+        "score": 0
+      },
+      "createdAt": "2025-11-14T02:45:17.154Z",
+      "updatedAt": "2025-11-14T02:45:17.154Z"
+    },
+    {
+      "id": "92dd3b33-3d0d-4256-b18a-2444ccff508e",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "sprintSpeed": 79.3,
+      "Ten_Meter_Sprint": {
+        "attempts": [
+          {
+            "notes": "Personel best",
+            "sprintTime": 1.85,
+            "attemptNumber": 1,
+            "standingLongJump": 240
+          }
+        ],
+        "bestTime": 1.85,
+        "meanTime": 1.85,
+        "anthropometricData": {
+          "armSpan": 180,
+          "calfGirth": 38,
+          "footLength": 27,
+          "thighGirth": 55
+        }
+      },
+      "Fourty_Meter_Dash": {
+        "attempts": [
+          {
+            "notes": "Good start",
+            "attemptNumber": 1,
+            "totalTime_0_40m": 5.12
+          }
+        ],
+        "bestTime": 5.12,
+        "meanTime": 5.12
+      },
+      "Repeated_Sprint_Ability": {
+        "bestTime": 4.32,
+        "meanTime": 5.53,
+        "totalTime": 33.19,
+        "worstTime": 6.32,
+        "sprintTimes": [4.32, 4.32, 5.61, 6.32, 6.32, 6.3],
+        "fatigueIndex": 46.3,
+        "restInterval": 20,
+        "percentDecrement": -28
+      },
+      "Five_0_Five_Agility_Test": {
+        "attempts": [
+          {
+            "notes": "Stronger Turn",
+            "leftTurnTime": 2.45,
+            "attemptNumber": 1,
+            "rightTurnTime": 2.51
+          }
+        ],
+        "bestLeftTime": 2.45,
+        "meanLeftTime": 2.45,
+        "bestRightTime": 2.51,
+        "meanRightTime": 2.51,
+        "asymmetryIndex": 0.06
+      },
+      "T_Test": {
+        "attempts": [
+          {
+            "notes": "Lost balance",
+            "attemptNumber": 1,
+            "completionTime": 10.52
+          }
+        ],
+        "bestTime": 10.52,
+        "meanTime": 10.52
+      },
+      "Illinois_Agility_Test": {
+        "attempts": [
+          {
+            "notes": "Smooth",
+            "attemptNumber": 1,
+            "completionTime": 15.37
+          }
+        ],
+        "bestTime": 15.37,
+        "meanTime": 15.37
+      },
+      "Visual_Reaction_Speed_Drill": {
+        "attempts": [
+          {
+            "notes": "perfect score",
+            "stimulus": "visual",
+            "reactionTime": 245,
+            "attemptNumber": 1
+          }
+        ],
+        "bestReactionTime": 245,
+        "meanReactionTime": 245
+      },
+      "Long_Jump": {
+        "attempts": [
+          {
+            "notes": "Good take off",
+            "distance": 520,
+            "runupSteps": 12,
+            "attemptNumber": 1
+          }
+        ],
+        "bestDistance": 520,
+        "meanDistance": 520
+      },
+      "Reactive_Agility_T_Test": {
+        "attempts": [
+          {
+            "notes": "Excelent reaction",
+            "attemptNumber": 1,
+            "completionTime": 11.25,
+            "correctResponseRate": 93
+          }
+        ],
+        "bestTime": 11.25,
+        "meanTime": 11.25,
+        "averageAccuracy": 93
+      },
+      "Standing_Long_Jump": {
+        "attempts": [
+          {
+            "notes": "Good",
+            "distance": 240,
+            "attemptNumber": 1
+          }
+        ],
+        "bestDistance": 240,
+        "meanDistance": 240
+      },
+      "acceleration": {
+        "score": 86
+      },
+      "agility": {
+        "score": 0
+      },
+      "reactionTime": {
+        "score": 0
+      },
+      "balance": {
+        "score": 0
+      },
+      "coordination": {
+        "score": 0
+      },
+      "createdAt": "2025-11-13T11:10:55.421Z",
+      "updatedAt": "2025-11-13T11:10:55.421Z"
+    },
+    {
+      "id": "4e0dcd62-c142-46ec-94cc-7615e0845e07",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "sprintSpeed": 79.3,
+      "Ten_Meter_Sprint": {
+        "attempts": [
+          {
+            "notes": "Personel best",
+            "sprintTime": 1.85,
+            "attemptNumber": 1,
+            "standingLongJump": 240
+          }
+        ],
+        "bestTime": 1.85,
+        "meanTime": 1.85,
+        "anthropometricData": {
+          "armSpan": 180,
+          "calfGirth": 38,
+          "footLength": 27,
+          "thighGirth": 55
+        }
+      },
+      "Fourty_Meter_Dash": {
+        "attempts": [
+          {
+            "notes": "Good start",
+            "attemptNumber": 1,
+            "totalTime_0_40m": 5.12
+          }
+        ],
+        "bestTime": 5.12,
+        "meanTime": 5.12
+      },
+      "Repeated_Sprint_Ability": {
+        "bestTime": 4.32,
+        "meanTime": 5.53,
+        "totalTime": 33.19,
+        "worstTime": 6.32,
+        "sprintTimes": [4.32, 4.32, 5.61, 6.32, 6.32, 6.3],
+        "fatigueIndex": 46.3,
+        "restInterval": 20,
+        "percentDecrement": -28
+      },
+      "Five_0_Five_Agility_Test": {
+        "attempts": [
+          {
+            "notes": "Stronger Turn",
+            "leftTurnTime": 2.45,
+            "attemptNumber": 1,
+            "rightTurnTime": 2.51
+          }
+        ],
+        "bestLeftTime": 2.45,
+        "meanLeftTime": 2.45,
+        "bestRightTime": 2.51,
+        "meanRightTime": 2.51,
+        "asymmetryIndex": 0.06
+      },
+      "T_Test": {
+        "attempts": [
+          {
+            "notes": "Lost balance",
+            "attemptNumber": 1,
+            "completionTime": 10.52
+          }
+        ],
+        "bestTime": 10.52,
+        "meanTime": 10.52
+      },
+      "Illinois_Agility_Test": {
+        "attempts": [
+          {
+            "notes": "Smooth",
+            "attemptNumber": 1,
+            "completionTime": 15.37
+          }
+        ],
+        "bestTime": 15.37,
+        "meanTime": 15.37
+      },
+      "Visual_Reaction_Speed_Drill": {
+        "attempts": [
+          {
+            "notes": "perfect score",
+            "stimulus": "visual",
+            "reactionTime": 245,
+            "attemptNumber": 1
+          }
+        ],
+        "bestReactionTime": 245,
+        "meanReactionTime": 245
+      },
+      "Long_Jump": {
+        "attempts": [
+          {
+            "notes": "Good take off",
+            "distance": 520,
+            "runupSteps": 12,
+            "attemptNumber": 1
+          }
+        ],
+        "bestDistance": 520,
+        "meanDistance": 520
+      },
+      "Reactive_Agility_T_Test": {
+        "attempts": [
+          {
+            "notes": "Excelent reaction",
+            "attemptNumber": 1,
+            "completionTime": 11.25,
+            "correctResponseRate": 93
+          }
+        ],
+        "bestTime": 11.25,
+        "meanTime": 11.25,
+        "averageAccuracy": 93
+      },
+      "Standing_Long_Jump": {
+        "attempts": [
+          {
+            "notes": "Good",
+            "distance": 240,
+            "attemptNumber": 1
+          }
+        ],
+        "bestDistance": 240,
+        "meanDistance": 240
+      },
+      "acceleration": {
+        "score": 86
+      },
+      "agility": {
+        "score": 0
+      },
+      "reactionTime": {
+        "score": 0
+      },
+      "balance": {
+        "score": 0
+      },
+      "coordination": {
+        "score": 0
+      },
+      "createdAt": "2025-11-13T06:37:37.825Z",
+      "updatedAt": "2025-11-13T06:37:37.825Z"
+    },
+    {
+      "id": "dc2bd038-c428-4e6b-a10f-b43e3e738721",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "sprintSpeed": 79.3,
+      "Ten_Meter_Sprint": {
+        "attempts": [
+          {
+            "notes": "Personel best",
+            "sprintTime": 1.85,
+            "attemptNumber": 1,
+            "standingLongJump": 240
+          }
+        ],
+        "bestTime": 1.85,
+        "meanTime": 1.85,
+        "anthropometricData": {}
+      },
+      "Fourty_Meter_Dash": {
+        "attempts": [
+          {
+            "notes": "Good start",
+            "attemptNumber": 1,
+            "totalTime_0_40m": 5.12
+          }
+        ],
+        "bestTime": 5.12,
+        "meanTime": 5.12
+      },
+      "Repeated_Sprint_Ability": {
+        "bestTime": 4.32,
+        "meanTime": 5.53,
+        "totalTime": 33.19,
+        "worstTime": 6.32,
+        "sprintTimes": [4.32, 4.32, 5.61, 6.32, 6.32, 6.3],
+        "fatigueIndex": 46.3,
+        "restInterval": 20,
+        "percentDecrement": -28
+      },
+      "Five_0_Five_Agility_Test": {
+        "attempts": [
+          {
+            "notes": "Stronger Turn",
+            "leftTurnTime": 2.45,
+            "attemptNumber": 1,
+            "rightTurnTime": 2.51
+          }
+        ],
+        "bestLeftTime": 2.45,
+        "meanLeftTime": 2.45,
+        "bestRightTime": 2.51,
+        "meanRightTime": 2.51,
+        "asymmetryIndex": 0.06
+      },
+      "T_Test": {
+        "attempts": [
+          {
+            "notes": "Lost balance",
+            "attemptNumber": 1,
+            "completionTime": 10.52
+          }
+        ],
+        "bestTime": 10.52,
+        "meanTime": 10.52
+      },
+      "Illinois_Agility_Test": {
+        "attempts": [
+          {
+            "notes": "Smooth",
+            "attemptNumber": 1,
+            "completionTime": 15.37
+          }
+        ],
+        "bestTime": 15.37,
+        "meanTime": 15.37
+      },
+      "Visual_Reaction_Speed_Drill": {
+        "attempts": [
+          {
+            "notes": "perfect score",
+            "stimulus": "visual",
+            "reactionTime": 245,
+            "attemptNumber": 1
+          }
+        ],
+        "bestReactionTime": 245,
+        "meanReactionTime": 245
+      },
+      "Long_Jump": {
+        "attempts": [
+          {
+            "notes": "Good take off",
+            "distance": 520,
+            "runupSteps": 12,
+            "attemptNumber": 1
+          }
+        ],
+        "bestDistance": 520,
+        "meanDistance": 520
+      },
+      "Reactive_Agility_T_Test": {
+        "attempts": [
+          {
+            "notes": "Excelent reaction",
+            "attemptNumber": 1,
+            "completionTime": 11.25,
+            "correctResponseRate": 93
+          }
+        ],
+        "bestTime": 11.25,
+        "meanTime": 11.25,
+        "averageAccuracy": 93
+      },
+      "Standing_Long_Jump": {
+        "attempts": [
+          {
+            "notes": "Good",
+            "distance": 240,
+            "attemptNumber": 1
+          }
+        ],
+        "bestDistance": 240,
+        "meanDistance": 240
+      },
+      "acceleration": {
+        "score": 86
+      },
+      "agility": {
+        "score": 0
+      },
+      "reactionTime": {
+        "score": 0
+      },
+      "balance": {
+        "score": 0
+      },
+      "coordination": {
+        "score": 0
+      },
+      "createdAt": "2025-11-12T19:03:29.056Z",
+      "updatedAt": "2025-11-12T19:03:29.056Z"
+    },
+    {
+      "id": "369cde2e-c022-4ed2-8305-fc3eab74d19f",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "sprintSpeed": 30,
+      "Ten_Meter_Sprint": null,
+      "Fourty_Meter_Dash": null,
+      "Repeated_Sprint_Ability": null,
+      "Five_0_Five_Agility_Test": null,
+      "T_Test": null,
+      "Illinois_Agility_Test": null,
+      "Visual_Reaction_Speed_Drill": null,
+      "Long_Jump": null,
+      "Reactive_Agility_T_Test": null,
+      "Standing_Long_Jump": null,
+      "acceleration": 30,
+      "agility": 30,
+      "reactionTime": 30,
+      "balance": 30,
+      "coordination": 30,
+      "createdAt": "2025-11-12T15:28:53.155Z",
+      "updatedAt": "2025-11-12T15:28:53.155Z"
+    },
+    {
+      "id": "e488a66c-fb33-42d0-be27-be998da367ee",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "sprintSpeed": 30,
+      "Ten_Meter_Sprint": null,
+      "Fourty_Meter_Dash": null,
+      "Repeated_Sprint_Ability": null,
+      "Five_0_Five_Agility_Test": null,
+      "T_Test": null,
+      "Illinois_Agility_Test": null,
+      "Visual_Reaction_Speed_Drill": null,
+      "Long_Jump": null,
+      "Reactive_Agility_T_Test": null,
+      "Standing_Long_Jump": null,
+      "acceleration": null,
+      "agility": null,
+      "reactionTime": null,
+      "balance": null,
+      "coordination": null,
+      "createdAt": "2025-11-11T11:57:19.917Z",
+      "updatedAt": "2025-11-11T11:57:19.917Z"
+    }
+  ],
+  "staminaHistory": [
+    {
+      "id": "0cabc54d-23a6-42cc-937e-8f592b327c46",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "vo2Max": 30.3,
+      "flexibility": 8.5,
+      "overallFlexibilityScore": 81,
+      "cardiovascularFitnessScore": 66,
+      "recoveryEfficiencyScore": 100,
+      "anthropometricData": null,
+      "Beep_Test": {
+        "attempts": [
+          {
+            "notes": "",
+            "testDate": "2025-11-14",
+            "finalLevel": 1,
+            "finalShuttle": 1,
+            "attemptNumber": 1
+          }
+        ],
+        "bestAttempt": 0,
+        "calculatedVO2Max": 30.3,
+        "estimatedDistance": 20
+      },
+      "Yo_Yo_Test": null,
+      "Cooper_Test": {
+        "attempts": [
+          {
+            "notes": "",
+            "testDate": "2025-11-14",
+            "surfaceType": "track",
+            "attemptNumber": 1,
+            "distanceCovered": 2650,
+            "weatherConditions": ""
+          }
+        ],
+        "bestAttempt": 0,
+        "averageDistance": 2650,
+        "calculatedVO2Max": 48
+      },
+      "Peak_Heart_Rate": {
+        "entries": [
+          {
+            "notes": "",
+            "peakHR": 192,
+            "inputMethod": "device",
+            "activityType": "spring training ",
+            "recordedDate": "2025-11-14",
+            "perceivedExertion": 9
+          }
+        ],
+        "maxRecordedHR": 192,
+        "trainingZones": {
+          "zone1": [96, 115],
+          "zone2": [115, 134],
+          "zone3": [134, 154],
+          "zone4": [154, 173],
+          "zone5": [173, 192]
+        },
+        "estimatedMaxHR": 195
+      },
+      "Resting_Heart_Rate": {
+        "attempts": [
+          {
+            "notes": "just woke up",
+            "timeOfDay": "afternoon",
+            "inputMethod": "device",
+            "heartRateBPM": 62,
+            "attemptNumber": 1,
+            "measurementDate": "2025-11-14"
+          }
+        ],
+        "lowestRHR": 62,
+        "averageRHR": 62,
+        "cardiovascularFitnessRating": "Good"
+      },
+      "Resting_Heart_Rate_Variability": null,
+      "Lactate_Threshold": null,
+      "Anaerobic_Capacity": null,
+      "Post_Exercise_Heart_Rate_Recovery": {
+        "attempts": [
+          {
+            "notes": "",
+            "peakHR": 145,
+            "testDate": "2025-11-14",
+            "restingHR": 65,
+            "inputMethod": "device",
+            "attemptNumber": 1,
+            "recovery1MinHR": 112,
+            "recovery2MinHR": 96,
+            "recovery3MinHR": 80,
+            "exerciseProtocol": "step-test-3min"
+          }
+        ],
+        "averageRecoveryRate": 33,
+        "bestRecoveryAttempt": 0,
+        "recoveryEfficiencyScore": 100
+      },
+      "Sit_and_Reach_Test": {
+        "attempts": [
+          {
+            "notes": "",
+            "attemptNumber": 1,
+            "reachDistance": 8.5
+          }
+        ],
+        "bestReach": 8.5,
+        "averageReach": 8.5,
+        "flexibilityScore": 77
+      },
+      "Active_Straight_Leg_Raise": {
+        "attempts": [
+          {
+            "notes": "",
+            "leftLegAngle": 75,
+            "attemptNumber": 1,
+            "rightLegAngle": 78
+          }
+        ],
+        "bestLeftAngle": 75,
+        "asymmetryScore": 3,
+        "bestRightAngle": 78,
+        "flexibilityScore": 87
+      },
+      "Shoulder_External_Internal_Rotation": {
+        "attempts": [
+          {
+            "notes": "",
+            "gripWidth": 75,
+            "attemptNumber": 1
+          }
+        ],
+        "bestGripWidth": 75,
+        "anthropometricData": {
+          "armSpan": 178,
+          "shoulderWidth": 42
+        },
+        "shoulderMobilityScore": 69
+      },
+      "Knee_to_Wall_Test": {
+        "attempts": [
+          {
+            "notes": "right ankle",
+            "attemptNumber": 1,
+            "leftFootDistance": 10.5,
+            "rightFootDistance": 9
+          }
+        ],
+        "asymmetryScore": 1.5,
+        "bestLeftDistance": 10.5,
+        "bestRightDistance": 9,
+        "ankleMobilityScore": 89
+      },
+      "recoveryTime": 30,
+      "createdAt": "2025-11-14T02:45:17.315Z",
+      "updatedAt": "2025-11-14T02:45:17.315Z"
+    },
+    {
+      "id": "1a066576-e7f4-465d-975e-3d76cb60bbbd",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "vo2Max": 30.3,
+      "flexibility": 8.5,
+      "overallFlexibilityScore": null,
+      "cardiovascularFitnessScore": 51,
+      "recoveryEfficiencyScore": null,
+      "anthropometricData": null,
+      "Beep_Test": {
+        "attempts": [
+          {
+            "notes": "",
+            "testDate": "2025-11-13",
+            "finalLevel": 1,
+            "finalShuttle": 1,
+            "attemptNumber": 1
+          }
+        ],
+        "bestAttempt": 0,
+        "calculatedVO2Max": 30.3,
+        "estimatedDistance": 20
+      },
+      "Yo_Yo_Test": null,
+      "Cooper_Test": null,
+      "Peak_Heart_Rate": null,
+      "Resting_Heart_Rate": null,
+      "Resting_Heart_Rate_Variability": null,
+      "Lactate_Threshold": null,
+      "Anaerobic_Capacity": null,
+      "Post_Exercise_Heart_Rate_Recovery": null,
+      "Sit_and_Reach_Test": null,
+      "Active_Straight_Leg_Raise": null,
+      "Shoulder_External_Internal_Rotation": null,
+      "Knee_to_Wall_Test": null,
+      "recoveryTime": 30,
+      "createdAt": "2025-11-13T11:10:55.589Z",
+      "updatedAt": "2025-11-13T11:10:55.589Z"
+    },
+    {
+      "id": "76294ee9-6a5c-4e2e-bb23-132f6707d8be",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "vo2Max": 32.6,
+      "flexibility": 8.5,
+      "overallFlexibilityScore": 79,
+      "cardiovascularFitnessScore": 69,
+      "recoveryEfficiencyScore": 100,
+      "anthropometricData": null,
+      "Beep_Test": {
+        "attempts": [
+          {
+            "notes": "",
+            "testDate": "2025-11-13",
+            "finalLevel": 2,
+            "finalShuttle": 2,
+            "attemptNumber": 1
+          }
+        ],
+        "bestAttempt": 0,
+        "calculatedVO2Max": 32.6,
+        "estimatedDistance": 180
+      },
+      "Yo_Yo_Test": null,
+      "Cooper_Test": {
+        "attempts": [
+          {
+            "notes": "",
+            "testDate": "2025-11-13",
+            "surfaceType": "track",
+            "attemptNumber": 1,
+            "distanceCovered": 2650,
+            "weatherConditions": ""
+          }
+        ],
+        "bestAttempt": 0,
+        "averageDistance": 2650,
+        "calculatedVO2Max": 48
+      },
+      "Peak_Heart_Rate": {
+        "entries": [
+          {
+            "notes": "",
+            "peakHR": 191,
+            "inputMethod": "device",
+            "activityType": "Sprint Training ",
+            "recordedDate": "2025-11-13",
+            "perceivedExertion": 9
+          }
+        ],
+        "maxRecordedHR": 191,
+        "trainingZones": {
+          "zone1": [96, 115],
+          "zone2": [115, 134],
+          "zone3": [134, 153],
+          "zone4": [153, 172],
+          "zone5": [172, 191]
+        },
+        "estimatedMaxHR": 195
+      },
+      "Resting_Heart_Rate": {
+        "attempts": [
+          {
+            "notes": "",
+            "timeOfDay": "morning",
+            "inputMethod": "device",
+            "heartRateBPM": 62,
+            "attemptNumber": 1,
+            "measurementDate": "2025-11-13"
+          }
+        ],
+        "lowestRHR": 62,
+        "averageRHR": 62,
+        "cardiovascularFitnessRating": "Good"
+      },
+      "Resting_Heart_Rate_Variability": null,
+      "Lactate_Threshold": null,
+      "Anaerobic_Capacity": null,
+      "Post_Exercise_Heart_Rate_Recovery": {
+        "attempts": [
+          {
+            "notes": "",
+            "peakHR": 144,
+            "testDate": "2025-11-13",
+            "restingHR": 64,
+            "inputMethod": "device",
+            "attemptNumber": 1,
+            "recovery1MinHR": 112,
+            "recovery2MinHR": 96,
+            "recovery3MinHR": 79,
+            "exerciseProtocol": "step-test-3min"
+          }
+        ],
+        "averageRecoveryRate": 32,
+        "bestRecoveryAttempt": 0,
+        "recoveryEfficiencyScore": 100
+      },
+      "Sit_and_Reach_Test": {
+        "attempts": [
+          {
+            "notes": "",
+            "attemptNumber": 1,
+            "reachDistance": 8.5
+          }
+        ],
+        "bestReach": 8.5,
+        "averageReach": 8.5,
+        "flexibilityScore": 77
+      },
+      "Active_Straight_Leg_Raise": {
+        "attempts": [
+          {
+            "notes": "",
+            "leftLegAngle": 75,
+            "attemptNumber": 1,
+            "rightLegAngle": 77
+          }
+        ],
+        "bestLeftAngle": 75,
+        "asymmetryScore": 2,
+        "bestRightAngle": 77,
+        "flexibilityScore": 86
+      },
+      "Shoulder_External_Internal_Rotation": {
+        "attempts": [
+          {
+            "notes": "",
+            "gripWidth": 74.5,
+            "attemptNumber": 1
+          }
+        ],
+        "bestGripWidth": 74.5,
+        "anthropometricData": {
+          "armSpan": 177.5,
+          "shoulderWidth": 42
+        },
+        "shoulderMobilityScore": 69
+      },
+      "Knee_to_Wall_Test": null,
+      "recoveryTime": 30,
+      "createdAt": "2025-11-13T06:37:38.005Z",
+      "updatedAt": "2025-11-13T06:37:38.005Z"
+    },
+    {
+      "id": "7fca32a6-2102-432c-9e0d-32edc0b03d9c",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "vo2Max": 33.4,
+      "flexibility": null,
+      "overallFlexibilityScore": null,
+      "cardiovascularFitnessScore": null,
+      "recoveryEfficiencyScore": null,
+      "anthropometricData": null,
+      "Beep_Test": null,
+      "Yo_Yo_Test": null,
+      "Cooper_Test": null,
+      "Peak_Heart_Rate": null,
+      "Resting_Heart_Rate": null,
+      "Resting_Heart_Rate_Variability": null,
+      "Lactate_Threshold": null,
+      "Anaerobic_Capacity": null,
+      "Post_Exercise_Heart_Rate_Recovery": null,
+      "Sit_and_Reach_Test": null,
+      "Active_Straight_Leg_Raise": null,
+      "Shoulder_External_Internal_Rotation": null,
+      "Knee_to_Wall_Test": null,
+      "recoveryTime": 144,
+      "createdAt": "2025-11-12T19:03:29.462Z",
+      "updatedAt": "2025-11-12T19:03:29.462Z"
+    },
+    {
+      "id": "8e95d137-2c6f-4735-aa5e-f10a7d6520c4",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "vo2Max": 33.4,
+      "flexibility": null,
+      "overallFlexibilityScore": null,
+      "cardiovascularFitnessScore": null,
+      "recoveryEfficiencyScore": null,
+      "anthropometricData": null,
+      "Beep_Test": null,
+      "Yo_Yo_Test": null,
+      "Cooper_Test": null,
+      "Peak_Heart_Rate": null,
+      "Resting_Heart_Rate": null,
+      "Resting_Heart_Rate_Variability": null,
+      "Lactate_Threshold": null,
+      "Anaerobic_Capacity": null,
+      "Post_Exercise_Heart_Rate_Recovery": null,
+      "Sit_and_Reach_Test": null,
+      "Active_Straight_Leg_Raise": null,
+      "Shoulder_External_Internal_Rotation": null,
+      "Knee_to_Wall_Test": null,
+      "recoveryTime": 144,
+      "createdAt": "2025-11-12T15:28:53.579Z",
+      "updatedAt": "2025-11-12T15:28:53.579Z"
+    },
+    {
+      "id": "c478e2aa-a6c2-4a29-a0d4-93d2bc4e439d",
+      "statId": "33fc4feb-f241-494e-84f0-fc5dd4d9aa78",
+      "vo2Max": 33.4,
+      "flexibility": null,
+      "overallFlexibilityScore": null,
+      "cardiovascularFitnessScore": null,
+      "recoveryEfficiencyScore": null,
+      "anthropometricData": null,
+      "Beep_Test": null,
+      "Yo_Yo_Test": null,
+      "Cooper_Test": null,
+      "Peak_Heart_Rate": null,
+      "Resting_Heart_Rate": null,
+      "Resting_Heart_Rate_Variability": null,
+      "Lactate_Threshold": null,
+      "Anaerobic_Capacity": null,
+      "Post_Exercise_Heart_Rate_Recovery": null,
+      "Sit_and_Reach_Test": null,
+      "Active_Straight_Leg_Raise": null,
+      "Shoulder_External_Internal_Rotation": null,
+      "Knee_to_Wall_Test": null,
+      "recoveryTime": 144,
+      "createdAt": "2025-11-11T11:57:19.917Z",
+      "updatedAt": "2025-11-11T11:57:19.917Z"
+    }
+  ],
+  "injuryHistory": [],
+  "lastUpdatedBy": "user_35Q9Mlu6743OhVqd33rd55IsF7O",
+  "lastUpdatedAt": "2025-11-14T02:45:16.819Z",
+  "lastUpdatedByName": "Moderator",
+  "createdAt": "2025-11-11T11:57:19.732Z",
+  "updatedAt": "2025-11-14T02:45:16.822Z",
+  "athlete": {
+    "id": "cmhu922wy0000v0psb8e2at0q",
+    "firstName": "Ashu",
+    "lastName": "Jha",
+    "clerkId": "user_35K5p3bPir3xmpBZBOfigVx6ITX"
+  }
+}

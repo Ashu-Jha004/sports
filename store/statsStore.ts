@@ -56,7 +56,7 @@ interface StatsState {
   requestLoading: boolean;
 
   // Actions
-  fetchUserStats: () => Promise<void>;
+  fetchUserStats: (userId: any) => Promise<void>;
   fetchNearbyGuides: (
     lat: number,
     lon: number,
@@ -96,16 +96,17 @@ export const useStatsStore = create<StatsState>()(
       requestLoading: false,
 
       // Fetch user stats
-      fetchUserStats: async () => {
+      fetchUserStats: async (userId: any) => {
         set({ statsLoading: true, statsError: null });
         try {
-          const response = await fetch("/api/users/stats");
+          const response = await fetch(`/api/stats/${userId}`);
           if (!response.ok) {
             throw new Error("Failed to fetch stats");
           }
 
           const data = await response.json();
-          set({ userStats: data.stats, statsLoading: false });
+          console.log("response by store", data);
+          set({ userStats: data, statsLoading: false });
         } catch (error) {
           set({
             statsError:
@@ -133,7 +134,7 @@ export const useStatsStore = create<StatsState>()(
       },
 
       // Fetch nearby guides and request status
-      fetchNearbyGuides: async (lat: number, lon: number, radius = 10) => {
+      fetchNearbyGuides: async (lat: number, lon: number, radius = 50) => {
         set({ guidesLoading: true, guidesError: null });
         try {
           // Fetch guides and request status in parallel

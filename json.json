@@ -1,8 +1,0 @@
-{
-    I want you create a component like "Quick Overview" component in existing application, this component has option called "Stat Update". when user click this option, a dialog box appears with a input box and two buttons. one button is initially disabled, second button is called "verify" button, which takes the "OTP" data from input box that was entered by the guide. Once Verify button is clicked, system takes the input and find a "PhysicalEvaluationRequest" record with same "OTP" and checks the "Status" of that record. if status is "accepted" than find basic user details of user, whose request was accepted by guide, to do that use "UserId" from "PhysicalEvaluationRequest" and find the user details of that same "UserId". Once user found, than show that users basic info like firstname, username, primary sport, profile Image Url, role, Rank
-Class,
-country,
-state,
-city,
-gender,  on to the component, below the the input box and  enable the disabled button. This button will navigate user to new page with url: "{baseUrl}/business/services/stats/{userId}.  In this page, is where guide will initiate the stats update process of Athletes/users of same "userId" from "PhysicalEvaluationRequest"
-}

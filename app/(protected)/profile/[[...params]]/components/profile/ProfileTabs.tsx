@@ -394,7 +394,7 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({ profileData }) => {
       {/* Tab Content */}
       <div className="p-6">
         {activeTab === "about" && <AboutTab />}
-        {activeTab === "stats" && <StatsTab />}
+        {activeTab === "stats" && <StatsTab profileData={profileData} />}
         {activeTab === "activity" && <ActivityTab />}
       </div>
     </div>

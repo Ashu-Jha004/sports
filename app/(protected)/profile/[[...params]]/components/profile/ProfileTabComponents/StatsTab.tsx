@@ -1,14 +1,17 @@
 // app/(protected)/profile/[[...params]]/components/profile/ProfileTabComponents/StatsTab.tsx
 import { useEffect } from "react";
-import { ChartBarIcon, UserSearch } from "lucide-react";
 import { useStatsStore } from "@/store/statsStore";
 import { useLocation } from "../../StatsComponents/hooks/useLocation";
 import { EmptyStatsState } from "../../StatsComponents/EmptyStatsState";
 import { GuideDiscoveryModal } from "../../StatsComponents/GuideDiscoveryModal";
 import { GuideList } from "../../StatsComponents/GuideList";
 import { RequestGuideDialog } from "../../StatsComponents/RequestGuideDialog";
-
-export const StatsTab = () => {
+import {
+  ActualStatsDisplay,
+  StatsLoadingSkeleton,
+  StatsErrorState,
+} from "./sub_components/ActualStatsDisplay";
+export const StatsTab = ({ profileData }: any) => {
   const {
     userStats,
     statsLoading,
@@ -28,19 +31,19 @@ export const StatsTab = () => {
     setRequestDialogOpen,
     clearErrors,
   } = useStatsStore();
-  console.log("user stats", userStats);
   const {
     location,
     loading: locationLoading,
     error: locationError,
     requestLocation,
   } = useLocation();
+  const { id } = profileData;
 
   // Fetch user stats on component mount
   useEffect(() => {
-    fetchUserStats();
+    fetchUserStats(id);
   }, [fetchUserStats]);
-
+  console.log("user stats", userStats);
   // Handle find guides action
   const handleFindGuides = async () => {
     clearErrors();
@@ -104,7 +107,12 @@ export const StatsTab = () => {
 
   // Error state
   if (statsError) {
-    return <StatsErrorState onRetry={fetchUserStats} error={statsError} />;
+    return (
+      <StatsErrorState
+        onRetry={fetchUserStats(profileData.id)}
+        error={statsError}
+      />
+    );
   }
 
   // Main render - conditional based on stats availability
@@ -151,121 +159,3 @@ export const StatsTab = () => {
     </div>
   );
 };
-
-// Actual Stats Display Component (for when user has stats)
-const ActualStatsDisplay = ({ stats, onFindGuides, loading = false }: any) => (
-  <div className="space-y-6">
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Performance Statistics
-        </h3>
-        <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-          View Details
-        </button>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          {
-            label: "Height",
-            value: stats.height ? `${stats.height} cm` : "--",
-            icon: "📏",
-          },
-          {
-            label: "Weight",
-            value: stats.weight ? `${stats.weight} kg` : "--",
-            icon: "⚖️",
-          },
-          {
-            label: "Age",
-            value: stats.age ? `${stats.age} yrs` : "--",
-            icon: "🎂",
-          },
-        ].map((stat, index) => (
-          <div
-            key={index}
-            className="bg-gray-50 rounded-lg p-4 border border-gray-100"
-          >
-            <div className="text-xl mb-2">{stat.icon}</div>
-            <div className="text-xl font-bold text-gray-900 mb-1">
-              {stat.value}
-            </div>
-            <div className="text-sm text-gray-600">{stat.label}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-    <button
-      onClick={onFindGuides}
-      disabled={loading}
-      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 
-                     disabled:bg-blue-400 text-white px-6 py-3 rounded-lg 
-                     font-medium transition-colors duration-200 focus:outline-none 
-                     focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-    >
-      {loading ? (
-        <>
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          Finding Guides...
-        </>
-      ) : (
-        <>
-          <UserSearch className="w-4 h-4" />
-          Find Nearby Guides
-        </>
-      )}
-    </button>
-  </div>
-);
-
-// Loading Skeleton
-const StatsLoadingSkeleton = () => (
-  <div className="space-y-6">
-    <div className="bg-gray-50 rounded-lg p-8">
-      <div className="animate-pulse">
-        <div className="w-16 h-16 bg-gray-300 rounded mx-auto mb-4"></div>
-        <div className="h-6 bg-gray-300 rounded w-1/3 mx-auto mb-2"></div>
-        <div className="h-4 bg-gray-300 rounded w-2/3 mx-auto mb-6"></div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-lg p-6 border border-gray-200"
-            >
-              <div className="w-8 h-8 bg-gray-300 rounded mb-2"></div>
-              <div className="h-8 bg-gray-300 rounded w-1/2 mb-1"></div>
-              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// Error State
-const StatsErrorState = ({
-  onRetry,
-  error,
-}: {
-  onRetry: () => void;
-  error: string;
-}) => (
-  <div className="bg-red-50 rounded-lg p-8 text-center border border-red-200">
-    <ChartBarIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
-    <h3 className="text-lg font-semibold text-red-900 mb-2">
-      Failed to Load Statistics
-    </h3>
-    <p className="text-red-700 mb-4">{error}</p>
-    <button
-      onClick={onRetry}
-      className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 
-               text-white rounded-lg font-medium transition-colors duration-200"
-    >
-      Try Again
-    </button>
-  </div>
-);
